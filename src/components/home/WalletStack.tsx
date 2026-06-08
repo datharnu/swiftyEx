@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import balanceBg from '../../public/Balance.png'
 import { RatesBanner } from './RatesBanner'
@@ -30,6 +30,14 @@ const CARD_DEFS: WalletCardDef[] = [
     matchTypes: ['naira'],
   },
   {
+    id: 'btc',
+    label: 'BTC',
+    displayName: 'Bitcoin Wallet',
+    currencySymbol: '₿',
+    isCrypto: true,
+    matchTypes: ['btc'],
+  },
+  {
     id: 'usdt',
     label: 'USDT',
     displayName: 'USDT Wallet',
@@ -44,14 +52,6 @@ const CARD_DEFS: WalletCardDef[] = [
     currencySymbol: '$',
     isCrypto: false,
     matchTypes: ['usd'],
-  },
-  {
-    id: 'btc',
-    label: 'BTC',
-    displayName: 'BTC Wallet',
-    currencySymbol: '₿',
-    isCrypto: true,
-    matchTypes: ['btc'],
   },
 ]
 
@@ -275,10 +275,16 @@ export default function WalletStack({
     )
   }, [wallets])
 
-  const cards = activeCards.length > 0 ? activeCards : CARD_DEFS.slice(0, 3)
+  const cards = activeCards.length > 0 ? activeCards : CARD_DEFS
 
   const [selectedId, setSelectedId] = useState<WalletType>(cards[0]?.id ?? 'naira')
   const [hideBalance, setHideBalance] = useState(true)
+
+  useEffect(() => {
+    if (!cards.some((c) => c.id === selectedId)) {
+      setSelectedId(cards[0]?.id ?? 'naira')
+    }
+  }, [cards, selectedId])
 
   const selectedDef = cards.find((c) => c.id === selectedId) ?? cards[0]
   const selectedWallet = wallets.find((w) =>

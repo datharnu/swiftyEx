@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { AlertAssetOption } from '@/components/alerts/AlertAssetIcon'
+import { AssetIcon } from '@/components/ui/AssetIcon'
 import { useAppStore } from '@/store/useAppStore'
 import { colors } from '@/lib/colors'
 import type { Rates } from '@/types'
@@ -8,8 +10,14 @@ import type { Rates } from '@/types'
 type AlertType = 'ngn' | 'crypto'
 type Direction = 'above' | 'below'
 
-const NGN_ASSETS = ['USD / NGN'] as const
-const CRYPTO_ASSETS = ['BTC / USDT', 'ETH / USDT'] as const
+const NGN_OPTIONS = [
+  { id: 'USD / NGN', label: 'USD / NGN', assets: ['USD', 'NGN'] },
+] as const
+
+const CRYPTO_OPTIONS = [
+  { id: 'BTC / USDT', label: 'BTC / USDT', assets: ['BTC'] },
+  { id: 'ETH / USDT', label: 'ETH / USDT', assets: ['ETH'] },
+] as const
 
 interface AddAlertFormProps {
   rates: Rates
@@ -62,6 +70,8 @@ export function AddAlertForm({ rates, onSuccess, onClose }: AddAlertFormProps) {
       : `$${Number(target).toLocaleString('en-US')}`
     : ''
 
+  const assetOptions = type === 'ngn' ? NGN_OPTIONS : CRYPTO_OPTIONS
+
   if (submitted) {
     return (
       <div className="flex flex-col items-center py-6 text-center">
@@ -105,52 +115,65 @@ export function AddAlertForm({ rates, onSuccess, onClose }: AddAlertFormProps) {
         <button
           type="button"
           onClick={() => handleTypeChange('ngn')}
-          className="flex-1 rounded-xl py-2.5 text-sm font-semibold transition"
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition"
           style={
             type === 'ngn'
               ? { backgroundColor: `${colors.teal}18`, color: colors.teal, boxShadow: `inset 0 0 0 1px ${colors.teal}55` }
               : { backgroundColor: `${colors.ink}08`, color: `${colors.ink}66` }
           }
         >
-          🇳🇬 NGN rate
+          <AssetIcon asset="USD" size={20} />
+          NGN rate
         </button>
         <button
           type="button"
           onClick={() => handleTypeChange('crypto')}
-          className="flex-1 rounded-xl py-2.5 text-sm font-semibold transition"
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition"
           style={
             type === 'crypto'
               ? { backgroundColor: `${colors.teal}18`, color: colors.teal, boxShadow: `inset 0 0 0 1px ${colors.teal}55` }
               : { backgroundColor: `${colors.ink}08`, color: `${colors.ink}66` }
           }
         >
-          ₿ Crypto price
+          <AssetIcon asset="BTC" size={20} />
+          Crypto price
         </button>
       </div>
 
       <p className="mb-2 text-xs font-semibold uppercase tracking-wide" style={{ color: `${colors.ink}44` }}>
-        Asset &amp; direction
+        Asset pair
       </p>
       <div className="mb-4 flex gap-2">
-        <select
-          value={asset}
-          onChange={(e) => setAsset(e.target.value)}
-          className="flex-1 rounded-xl border px-3 py-2.5 text-sm outline-none"
-          style={{ borderColor: `${colors.ink}14`, backgroundColor: `${colors.ink}06`, color: colors.ink }}
-        >
-          {(type === 'ngn' ? NGN_ASSETS : CRYPTO_ASSETS).map((a) => (
-            <option key={a}>{a}</option>
-          ))}
-        </select>
-        <select
-          value={direction}
-          onChange={(e) => setDirection(e.target.value as Direction)}
-          className="flex-1 rounded-xl border px-3 py-2.5 text-sm outline-none"
-          style={{ borderColor: `${colors.ink}14`, backgroundColor: `${colors.ink}06`, color: colors.ink }}
-        >
-          <option value="above">Goes above</option>
-          <option value="below">Falls below</option>
-        </select>
+        {assetOptions.map((option) => (
+          <AlertAssetOption
+            key={option.id}
+            assets={[...option.assets]}
+            label={option.label}
+            selected={asset === option.id}
+            onClick={() => setAsset(option.id)}
+          />
+        ))}
+      </div>
+
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide" style={{ color: `${colors.ink}44` }}>
+        Direction
+      </p>
+      <div className="mb-4 flex gap-2">
+        {(['above', 'below'] as const).map((d) => (
+          <button
+            key={d}
+            type="button"
+            onClick={() => setDirection(d)}
+            className="flex-1 rounded-xl border px-3 py-2.5 text-sm font-semibold transition"
+            style={
+              direction === d
+                ? { borderColor: colors.ink, backgroundColor: colors.ink, color: colors.white }
+                : { borderColor: `${colors.ink}14`, backgroundColor: `${colors.ink}06`, color: colors.ink }
+            }
+          >
+            {d === 'above' ? 'Goes above' : 'Falls below'}
+          </button>
+        ))}
       </div>
 
       <p className="mb-2 text-xs font-semibold uppercase tracking-wide" style={{ color: `${colors.ink}44` }}>

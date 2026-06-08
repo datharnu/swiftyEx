@@ -92,7 +92,7 @@ export function PnLStats({ stats }: PnLStatsProps) {
         <h2 className="text-[17px] font-bold" style={{ color: colors.ink }}>
           P&amp;L
         </h2>
-        <SimulatedBadge />
+        {/* <SimulatedBadge /> */}
       </div>
 
       <div

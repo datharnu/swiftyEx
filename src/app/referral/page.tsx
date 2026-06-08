@@ -36,7 +36,7 @@ export default function ReferralPage() {
                 <h1 className="text-[17px] font-bold" style={{ color: colors.ink }}>
                   Referral Center
                 </h1>
-                <SimulatedBadge label="Demo stats" />
+                {/* <SimulatedBadge label="Demo stats" /> */}
               </div>
               <p className="text-sm" style={{ color: `${colors.ink}55` }}>
                 Your referral code is live · earnings &amp; ranks are simulated

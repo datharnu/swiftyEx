@@ -227,9 +227,16 @@ interface ApiTransaction {
   status?: string
 }
 
+function normalizeWalletType(type: string): Wallet['wallet_type'] {
+  const key = type.toLowerCase()
+  if (key === 'bitcoin') return 'btc'
+  if (key === 'ethereum' || key === 'eth') return 'ethereum'
+  return key as Wallet['wallet_type']
+}
+
 function normalizeWallet(raw: ApiWallet): Wallet {
   return {
-    wallet_type: raw.wallet_type as Wallet['wallet_type'],
+    wallet_type: normalizeWalletType(raw.wallet_type),
     blockchain: raw.blockchain,
     balance: raw.balance,
     deposit_address: raw.deposit_address ?? raw.address ?? null,

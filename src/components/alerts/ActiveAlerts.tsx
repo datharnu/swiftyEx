@@ -1,5 +1,6 @@
 'use client'
 
+import { AlertAssetIcon } from '@/components/alerts/AlertAssetIcon'
 import { Bell, TrendingDown, TrendingUp, X } from 'lucide-react'
 import {
   formatAlertAsset,
@@ -61,14 +62,7 @@ export function ActiveAlerts({ rates, onAdd }: ActiveAlertsProps) {
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2.5">
-                <div
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm"
-                  style={{
-                    backgroundColor: alert.type === 'naira_rate' ? `${colors.teal}18` : `${colors.gold}22`,
-                  }}
-                >
-                  {alert.type === 'naira_rate' ? '🇳🇬' : '₿'}
-                </div>
+                <AlertAssetIcon alert={alert} size={36} />
                 <div>
                   <p className="text-[13.5px] font-semibold" style={{ color: colors.ink }}>
                     {formatAlertAsset(alert)}

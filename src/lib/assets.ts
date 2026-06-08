@@ -43,11 +43,12 @@ export function getAssetLabel(asset: string): string {
 }
 
 export function walletTypeToAssetId(walletType: string): string {
-  if (walletType === 'naira') return 'NGN'
-  if (walletType === 'ethereum') return 'ETH'
-  if (walletType === 'usdt') return 'USDT'
-  if (walletType === 'usd') return 'USD'
-  if (walletType === 'btc') return 'BTC'
+  const key = walletType.toLowerCase()
+  if (key === 'naira') return 'NGN'
+  if (key === 'ethereum' || key === 'eth') return 'ETH'
+  if (key === 'usdt') return 'USDT'
+  if (key === 'usd') return 'USD'
+  if (key === 'btc' || key === 'bitcoin') return 'BTC'
   return walletType.toUpperCase()
 }
 
@@ -56,10 +57,11 @@ export function getWalletLabel(walletType: string): string {
     naira: 'Naira',
     usdt: 'USDT',
     usd: 'USD',
-    btc: 'BTC',
+    btc: 'Bitcoin',
+    bitcoin: 'Bitcoin',
     ethereum: 'ETH',
   }
-  return labels[walletType] ?? walletType
+  return labels[walletType.toLowerCase()] ?? walletType
 }
 
 export function getWalletSymbol(walletType: string): string {
@@ -68,9 +70,10 @@ export function getWalletSymbol(walletType: string): string {
     usdt: '₮',
     usd: '$',
     btc: '₿',
+    bitcoin: '₿',
     ethereum: 'Ξ',
   }
-  return symbols[walletType] ?? ''
+  return symbols[walletType.toLowerCase()] ?? ''
 }
 
 export function holdingIdToAsset(holdingId: string): string {

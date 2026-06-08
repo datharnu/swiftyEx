@@ -77,7 +77,7 @@ export function RatesBanner({
         backgroundPosition: 'center',
       }}
     >
-      {lastUpdated && (
+      {/* {lastUpdated && (
         <div className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full border border-white/15 bg-black/20 px-2.5 py-1 backdrop-blur-sm">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
           <span className="text-[10px] font-semibold uppercase tracking-wide text-white/90">
@@ -87,7 +87,7 @@ export function RatesBanner({
             {lastUpdated.toLocaleTimeString('en-NG', { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
-      )}
+      )} */}
 
       <div className={`flex items-center pt-4 ${onSetAlert ? 'pb-3' : 'pb-4'}`}>
         <RateColumn icon={<BuyRateIcon />} label="Buy Rate" value={formatRate(pair.buy)} />

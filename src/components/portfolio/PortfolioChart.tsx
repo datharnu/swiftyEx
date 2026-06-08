@@ -128,7 +128,7 @@ export function PortfolioChart({ totalNgn }: PortfolioChartProps) {
           <p className="text-sm font-medium" style={{ color: `${colors.white}CC` }}>
             {activePoint?.fullLabel}
           </p>
-          <SimulatedBadge label="Demo" className="!bg-white/15 !text-white/90" />
+          {/* <SimulatedBadge label="Demo" className="!bg-white/15 !text-white/90" /> */}
         </div>
         <p
           className="mt-0.5 font-mono text-3xl font-bold tracking-tight"

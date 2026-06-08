@@ -63,7 +63,7 @@ export default function ActionsPage() {
           <h1 className="text-[17px] font-bold" style={{ color: colors.ink }}>
             Actions
           </h1>
-          <SimulatedBadge label="Demo alerts & DCA" />
+          {/* <SimulatedBadge label="Demo alerts & DCA" /> */}
         </div>
         <p className="mt-0.5 text-sm" style={{ color: `${colors.ink}55` }}>
           Live rates above · alerts &amp; DCA plans are simulated locally
