@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { SimulatedBadge } from '@/components/ui/SimulatedBadge'
+// import { SimulatedBadge } from '@/components/ui/SimulatedBadge'
 import { colors } from '@/lib/colors'
 import type { ChartPoint, ChartRange } from '@/lib/portfolio'
 import { formatNgn, mockChartData } from '@/lib/portfolio'

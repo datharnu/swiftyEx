@@ -11,7 +11,7 @@ import { PullToRefresh } from '@/components/ui/PullToRefresh'
 import { Loader } from '@/components/ui/Loader'
 import { colors } from '@/lib/colors'
 import { mockReferral } from '@/lib/mock'
-import { SimulatedBadge } from '@/components/ui/SimulatedBadge'
+// import { SimulatedBadge } from '@/components/ui/SimulatedBadge'
 import { formatEarnings } from '@/lib/referral'
 import { useAppStore } from '@/store/useAppStore'
 

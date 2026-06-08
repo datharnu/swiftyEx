@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { SimulatedBadge } from '@/components/ui/SimulatedBadge'
+// import { SimulatedBadge } from '@/components/ui/SimulatedBadge'
 import { colors } from '@/lib/colors'
 import type { PnLStats as PnLStatsType } from '@/lib/portfolio'
 import { formatNgn } from '@/lib/portfolio'
