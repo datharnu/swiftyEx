@@ -1,6 +1,7 @@
 'use client'
 
 import { Calendar, Repeat, X } from 'lucide-react'
+import { AssetIconBadge } from '@/components/ui/AssetIcon'
 import { frequencyLabel, formatNextRun } from '@/lib/actions'
 import { colors } from '@/lib/colors'
 import { formatNgn } from '@/lib/portfolio'
@@ -62,12 +63,11 @@ export function ActivePlans({ onAdd }: ActivePlansProps) {
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2.5">
-                <div
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-                  style={{ backgroundColor: assetColor }}
-                >
-                  {plan.asset.slice(0, 1)}
-                </div>
+                <AssetIconBadge
+                  asset={plan.asset}
+                  size={36}
+                  bgClassName="bg-white ring-1 ring-zinc-100"
+                />
                 <div>
                   <p className="text-[13.5px] font-semibold" style={{ color: colors.ink }}>
                     {plan.asset} DCA

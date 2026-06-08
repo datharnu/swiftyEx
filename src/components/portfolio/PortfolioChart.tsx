@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { SimulatedBadge } from '@/components/ui/SimulatedBadge'
 import { colors } from '@/lib/colors'
 import type { ChartPoint, ChartRange } from '@/lib/portfolio'
 import { formatNgn, mockChartData } from '@/lib/portfolio'
@@ -123,9 +124,12 @@ export function PortfolioChart({ totalNgn }: PortfolioChartProps) {
 
       {/* Selected value */}
       <div className="mt-4">
-        <p className="text-sm font-medium" style={{ color: `${colors.white}CC` }}>
-          {activePoint?.fullLabel}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium" style={{ color: `${colors.white}CC` }}>
+            {activePoint?.fullLabel}
+          </p>
+          <SimulatedBadge label="Demo" className="!bg-white/15 !text-white/90" />
+        </div>
         <p
           className="mt-0.5 font-mono text-3xl font-bold tracking-tight"
           style={{ color: colors.white }}

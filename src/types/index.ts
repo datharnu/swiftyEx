@@ -5,21 +5,33 @@ export interface TelegramUser {
   language_code?: string
 }
 
+export interface KycLevel {
+  level_id: number
+  level_name: string
+  daily_limit: number
+  monthly_limit: number
+}
+
 export interface UserProfile {
-  chat_id: number
+  chat_id: string | number
   username: string
   first_name: string
+  name?: string | null
   kyc_verified: boolean
-  kyc_level: number
+  kyc_level: KycLevel | number
   referral_code: string
 }
 
+export type WalletType = 'btc' | 'ethereum' | 'usdt' | 'usd' | 'naira'
+
 export interface Wallet {
-  wallet_type: 'btc' | 'ethereum' | 'usdt' | 'naira'
+  wallet_type: WalletType
   blockchain: string | null
   balance: string
   deposit_address: string | null
 }
+
+export type TransactionStatus = 'completed' | 'pending' | 'failed' | 'processing'
 
 export interface Transaction {
   id: string
@@ -29,6 +41,15 @@ export interface Transaction {
   amount_ngn: string
   date: string
   is_dca: boolean
+  status?: TransactionStatus
+}
+
+export interface TransactionsPage {
+  transactions: Transaction[]
+  count: number
+  page: number
+  page_size: number
+  has_next: boolean
 }
 
 export interface Rate {
@@ -75,4 +96,11 @@ export interface PriceAlert {
   current: number
   active: boolean
   type: 'crypto' | 'naira_rate'
+}
+
+export interface ChatMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: Date
 }

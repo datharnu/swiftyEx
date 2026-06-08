@@ -8,7 +8,7 @@ import {
 import { mockRates } from './mock'
 import { getInitData } from './telegram'
 import { useApiDebugStore } from '@/store/useApiDebugStore'
-import type { Rates, Transaction, UserProfile, Wallet } from '@/types'
+import type { Rates, Transaction, TransactionsPage, UserProfile, Wallet } from '@/types'
 
 interface RequestMeta {
   startTime: number
@@ -182,6 +182,7 @@ export function parseRatesResponse(data: unknown): Rates {
 
   if (!rates?.length) return mockRates
 
+  // Live USD/NGN from API; BTC/ETH slots use demo values until rate API expands
   const result: Rates = { ...mockRates }
 
   for (const item of rates) {
@@ -203,31 +204,113 @@ export function parseRatesResponse(data: unknown): Rates {
   return result
 }
 
+interface ApiWallet {
+  wallet_type: string
+  blockchain: string | null
+  balance: string
+  address?: string | null
+  deposit_address?: string | null
+}
+
+interface ApiTransaction {
+  id?: string | number
+  type?: string
+  transaction_type?: string
+  asset?: string
+  wallet_type?: string
+  amount?: string
+  amount_ngn?: string
+  ngn_amount?: string
+  date?: string
+  created_at?: string
+  is_dca?: boolean
+  status?: string
+}
+
+function normalizeWallet(raw: ApiWallet): Wallet {
+  return {
+    wallet_type: raw.wallet_type as Wallet['wallet_type'],
+    blockchain: raw.blockchain,
+    balance: raw.balance,
+    deposit_address: raw.deposit_address ?? raw.address ?? null,
+  }
+}
+
+function normalizeTransaction(raw: ApiTransaction, index: number): Transaction {
+  const type = (raw.type ?? raw.transaction_type ?? 'deposit') as Transaction['type']
+  const status = raw.status as Transaction['status'] | undefined
+
+  return {
+    id: String(raw.id ?? `tx-${index}`),
+    type,
+    asset: (raw.asset ?? raw.wallet_type ?? 'USDT').toUpperCase(),
+    amount: raw.amount ?? '0',
+    amount_ngn: raw.amount_ngn ?? raw.ngn_amount ?? '0',
+    date: raw.date ?? raw.created_at ?? new Date().toISOString(),
+    is_dca: raw.is_dca ?? false,
+    status: status ?? 'completed',
+  }
+}
+
 export function parseUserResponse(data: unknown): UserProfile | null {
   if (!data || typeof data !== 'object' || 'error' in data) return null
   const user = data as UserProfile
-  if (typeof user.chat_id !== 'number') return null
+  if (user.chat_id == null || user.chat_id === '') return null
   return user
 }
 
 export function parseWalletsResponse(data: unknown): Wallet[] {
-  if (Array.isArray(data)) return data as Wallet[]
-  if (data && typeof data === 'object' && Array.isArray((data as { wallets?: Wallet[] }).wallets)) {
-    return (data as { wallets: Wallet[] }).wallets
+  if (Array.isArray(data)) {
+    return (data as ApiWallet[]).map(normalizeWallet)
+  }
+  if (data && typeof data === 'object' && Array.isArray((data as { wallets?: ApiWallet[] }).wallets)) {
+    return (data as { wallets: ApiWallet[] }).wallets.map(normalizeWallet)
   }
   return []
 }
 
 export function parseTransactionsResponse(data: unknown): Transaction[] {
-  if (Array.isArray(data)) return data as Transaction[]
-  if (
-    data &&
-    typeof data === 'object' &&
-    Array.isArray((data as { transactions?: Transaction[] }).transactions)
-  ) {
-    return (data as { transactions: Transaction[] }).transactions
+  return parseTransactionsPage(data).transactions
+}
+
+export function parseTransactionsPage(data: unknown): TransactionsPage {
+  const empty: TransactionsPage = {
+    transactions: [],
+    count: 0,
+    page: 1,
+    page_size: TRANSACTIONS_PAGE_SIZE,
+    has_next: false,
   }
-  return []
+
+  if (Array.isArray(data)) {
+    return {
+      ...empty,
+      transactions: (data as ApiTransaction[]).map(normalizeTransaction),
+      count: data.length,
+    }
+  }
+
+  if (!data || typeof data !== 'object') return empty
+
+  const payload = data as {
+    results?: ApiTransaction[]
+    transactions?: ApiTransaction[]
+    count?: number
+    page?: number
+    page_size?: number
+    has_next?: boolean
+  }
+
+  const rawList = payload.results ?? payload.transactions ?? []
+  const transactions = rawList.map(normalizeTransaction)
+
+  return {
+    transactions,
+    count: payload.count ?? transactions.length,
+    page: payload.page ?? 1,
+    page_size: payload.page_size ?? TRANSACTIONS_PAGE_SIZE,
+    has_next: payload.has_next ?? transactions.length >= TRANSACTIONS_PAGE_SIZE,
+  }
 }
 
 export const getMe = () => api.post<UserProfile>('/miniapp/me')

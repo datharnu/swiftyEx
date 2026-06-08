@@ -10,6 +10,7 @@ import { DCAForm } from '@/components/dca/DCAForm'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { StatusBar } from '@/components/layout/StatusBar'
 import { BottomSheet } from '@/components/ui/BottomSheet'
+import { SimulatedBadge } from '@/components/ui/SimulatedBadge'
 import { mockRates } from '@/lib/mock'
 import { colors } from '@/lib/colors'
 import { useAppStore } from '@/store/useAppStore'
@@ -58,11 +59,14 @@ export default function ActionsPage() {
       <StatusBar />
 
       <div className="px-6 pt-2">
-        <h1 className="text-[17px] font-bold" style={{ color: colors.ink }}>
-          Actions
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-[17px] font-bold" style={{ color: colors.ink }}>
+            Actions
+          </h1>
+          <SimulatedBadge label="Demo alerts & DCA" />
+        </div>
         <p className="mt-0.5 text-sm" style={{ color: `${colors.ink}55` }}>
-          Price alerts &amp; recurring buys
+          Live rates above · alerts &amp; DCA plans are simulated locally
         </p>
       </div>
 

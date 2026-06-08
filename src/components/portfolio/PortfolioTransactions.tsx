@@ -39,8 +39,8 @@ export function PortfolioTransactions({ initialTransactions }: PortfolioTransact
       setLoading(true)
       try {
         const data = await fetchTransactions(nextPage, walletType)
-        setTransactions((prev) => (replace ? data : [...prev, ...data]))
-        setHasMore(data.length >= TRANSACTIONS_PAGE_SIZE)
+        setTransactions((prev) => (replace ? data.transactions : [...prev, ...data.transactions]))
+        setHasMore(data.has_next)
         setPage(nextPage)
       } finally {
         setLoading(false)

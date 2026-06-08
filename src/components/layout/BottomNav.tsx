@@ -11,18 +11,18 @@ const navItems = [
   {
     href: '/portfolio',
     label: 'Portfolio',
-    icon: (active: boolean) => <TargetIcon active={active} />,
-  },
-  {
-    href: '/referral',
-    label: 'Profile',
-    icon: (active: boolean) => <UserIcon active={active} />,
+    icon: (active: boolean) => <ChartIcon active={active} />,
   },
   {
     href: '/actions',
     label: 'Actions',
-    icon: (active: boolean) => <UserIcon active={active} />,
-    }
+    icon: (active: boolean) => <SparkleIcon active={active} />,
+  },
+  {
+    href: '/referral',
+    label: 'Earn',
+    icon: (active: boolean) => <GiftIcon active={active} />,
+  },
 ] as const
 
 function GridIcon({ active }: { active: boolean }) {
@@ -37,27 +37,35 @@ function GridIcon({ active }: { active: boolean }) {
   )
 }
 
-function TargetIcon({ active }: { active: boolean }) {
+function ChartIcon({ active }: { active: boolean }) {
   const stroke = active ? '#111111' : '#C4C4C4'
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="12" cy="12" r="9" stroke={stroke} strokeWidth="2" />
-      <circle cx="12" cy="12" r="3" fill={active ? '#111111' : '#C4C4C4'} />
+      <path d="M4 20V10M10 20V4M16 20v-6M22 20V8" stroke={stroke} strokeWidth="2" strokeLinecap="round" />
     </svg>
   )
 }
 
-function UserIcon({ active }: { active: boolean }) {
-  const fill = active ? '#111111' : '#C4C4C4'
+function SparkleIcon({ active }: { active: boolean }) {
+  const fill = active ? '#7C3AED' : '#C4C4C4'
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="12" cy="8" r="4" fill={fill} />
       <path
-        d="M5 20c0-3.866 3.134-7 7-7s7 3.134 7 7"
-        stroke={fill}
-        strokeWidth="2"
-        strokeLinecap="round"
+        d="M12 2l1.5 5.5L19 9l-5.5 1.5L12 16l-1.5-5.5L5 9l5.5-1.5L12 2z"
+        fill={fill}
       />
+      <path d="M19 14l.8 2.8L22.5 18l-2.7.7L19 21.5l-.8-2.8L15.5 18l2.7-.7L19 14z" fill={fill} opacity={active ? 1 : 0.6} />
+    </svg>
+  )
+}
+
+function GiftIcon({ active }: { active: boolean }) {
+  const stroke = active ? '#111111' : '#C4C4C4'
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect x="3" y="10" width="18" height="11" rx="2" stroke={stroke} strokeWidth="2" />
+      <path d="M12 10v11M3 14h18" stroke={stroke} strokeWidth="2" />
+      <path d="M12 10c-2-3-4-4-6-2s0 4 3 4h3M12 10c2-3 4-4 6-2s0 4-3 4h-3" stroke={stroke} strokeWidth="2" strokeLinecap="round" />
     </svg>
   )
 }
@@ -68,7 +76,7 @@ export function BottomNav() {
 
   return (
     <nav className="pointer-events-none fixed bottom-6 left-1/2 z-50 -translate-x-1/2">
-      <ul className="pointer-events-auto flex items-center gap-10 rounded-full bg-white px-10 py-4 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
+      <ul className="pointer-events-auto flex items-center gap-10 rounded-full bg-white px-8 py-4 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
         {navItems.map((item) => {
           const isActive = pathname === item.href
 
@@ -77,7 +85,7 @@ export function BottomNav() {
               <button
                 type="button"
                 onClick={() => router.push(item.href)}
-                className="flex items-center justify-center transition-transform active:scale-95"
+                className="flex flex-col items-center justify-center gap-0.5 transition-transform active:scale-95"
                 aria-label={item.label}
                 aria-current={isActive ? 'page' : undefined}
               >

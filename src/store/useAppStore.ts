@@ -5,22 +5,33 @@ import {
   getTransactions,
   getWallets,
   parseRatesResponse,
-  parseTransactionsResponse,
+  parseTransactionsPage,
   parseUserResponse,
   parseWalletsResponse,
 } from '@/lib/api'
-import { mockAlerts, mockDCAPlans, mockRates, mockTransactions, mockUser, mockWallets } from '@/lib/mock'
+import { isDevMockFallbackEnabled } from '@/lib/data-source'
+import {
+  mockAlerts,
+  mockDCAPlans,
+  mockRates,
+  mockTransactions,
+  mockUser,
+  mockWallets,
+} from '@/lib/mock'
 import type { UserProfile, Wallet, Transaction, Rates, DCAplan, PriceAlert } from '@/types'
 
 interface AppStore {
   user: UserProfile | null
   wallets: Wallet[]
   transactions: Transaction[]
+  transactionCount: number
   rates: Rates | null
   dcaPlans: DCAplan[]
   alerts: PriceAlert[]
   isLoading: boolean
+  isRefreshing: boolean
   isInitialized: boolean
+  error: string | null
   setUser: (user: UserProfile) => void
   setWallets: (wallets: Wallet[]) => void
   setTransactions: (transactions: Transaction[]) => void
@@ -30,19 +41,26 @@ interface AppStore {
   addAlert: (alert: PriceAlert) => void
   removeAlert: (id: string) => void
   fetchAppData: () => Promise<void>
+  refreshAppData: () => Promise<void>
   fetchRates: () => Promise<Rates>
-  fetchTransactions: (page?: number, wallet_type?: string) => Promise<Transaction[]>
+  fetchTransactions: (
+    page?: number,
+    wallet_type?: string,
+  ) => Promise<{ transactions: Transaction[]; has_next: boolean; count: number }>
 }
 
 export const useAppStore = create<AppStore>((set, get) => ({
   user: null,
   wallets: [],
   transactions: [],
+  transactionCount: 0,
   rates: null,
   dcaPlans: mockDCAPlans,
   alerts: mockAlerts,
   isLoading: false,
+  isRefreshing: false,
   isInitialized: false,
+  error: null,
 
   setUser: (user) => set({ user }),
   setWallets: (wallets) => set({ wallets }),
@@ -60,32 +78,47 @@ export const useAppStore = create<AppStore>((set, get) => ({
       set({ rates })
       return rates
     } catch {
-      set({ rates: mockRates })
-      return mockRates
+      const fallback = isDevMockFallbackEnabled() ? mockRates : get().rates ?? mockRates
+      set({ rates: fallback })
+      return fallback
     }
   },
 
   fetchTransactions: async (page = 1, wallet_type = '') => {
     try {
       const res = await getTransactions(page, wallet_type)
-      return parseTransactionsResponse(res.data)
-    } catch {
-      if (wallet_type) {
-        return mockTransactions.filter((t) => {
-          if (wallet_type === 'usdt') return t.asset === 'USDT'
-          if (wallet_type === 'btc') return t.asset === 'BTC'
-          if (wallet_type === 'naira') return t.type === 'deposit' || t.type === 'withdrawal'
-          return true
-        })
+      const parsed = parseTransactionsPage(res.data)
+      return {
+        transactions: parsed.transactions,
+        has_next: parsed.has_next,
+        count: parsed.count,
       }
-      return mockTransactions
+    } catch {
+      if (!isDevMockFallbackEnabled()) {
+        return { transactions: [], has_next: false, count: 0 }
+      }
+
+      const filtered = wallet_type
+        ? mockTransactions.filter((t) => {
+            if (wallet_type === 'usdt') return t.asset === 'USDT'
+            if (wallet_type === 'btc') return t.asset === 'BTC'
+            if (wallet_type === 'naira') return t.type === 'deposit' || t.type === 'withdrawal'
+            return true
+          })
+        : mockTransactions
+
+      return {
+        transactions: filtered,
+        has_next: false,
+        count: filtered.length,
+      }
     }
   },
 
   fetchAppData: async () => {
     if (get().isLoading) return
 
-    set({ isLoading: true })
+    set({ isLoading: true, error: null })
 
     try {
       const [meRes, walletsRes, ratesRes, txRes] = await Promise.all([
@@ -98,24 +131,89 @@ export const useAppStore = create<AppStore>((set, get) => ({
       const user = parseUserResponse(meRes.data)
       const wallets = parseWalletsResponse(walletsRes.data)
       const rates = parseRatesResponse(ratesRes.data)
-      const transactions = parseTransactionsResponse(txRes.data)
+      const txPage = parseTransactionsPage(txRes.data)
+
+      if (!user && isDevMockFallbackEnabled()) {
+        set({
+          user: mockUser,
+          wallets: wallets.length ? wallets : mockWallets,
+          rates,
+          transactions: txPage.transactions,
+          transactionCount: txPage.count,
+          isLoading: false,
+          isInitialized: true,
+          error: null,
+        })
+        return
+      }
 
       set({
-        user: user ?? mockUser,
-        wallets: wallets.length ? wallets : mockWallets,
+        user,
+        wallets,
         rates,
-        transactions: transactions.length ? transactions : mockTransactions,
+        transactions: txPage.transactions,
+        transactionCount: txPage.count,
         isLoading: false,
         isInitialized: true,
+        error: null,
+      })
+    } catch {
+      if (isDevMockFallbackEnabled()) {
+        set({
+          user: mockUser,
+          wallets: mockWallets,
+          rates: mockRates,
+          transactions: mockTransactions,
+          transactionCount: mockTransactions.length,
+          isLoading: false,
+          isInitialized: true,
+          error: null,
+        })
+        return
+      }
+
+      set({
+        user: null,
+        wallets: [],
+        rates: null,
+        transactions: [],
+        transactionCount: 0,
+        isLoading: false,
+        isInitialized: true,
+        error: 'Unable to load your data. Pull down to retry.',
+      })
+    }
+  },
+
+  refreshAppData: async () => {
+    set({ isRefreshing: true, error: null })
+
+    try {
+      const [meRes, walletsRes, ratesRes, txRes] = await Promise.all([
+        getMe(),
+        getWallets(),
+        getRates(),
+        getTransactions(1, ''),
+      ])
+
+      const user = parseUserResponse(meRes.data)
+      const wallets = parseWalletsResponse(walletsRes.data)
+      const rates = parseRatesResponse(ratesRes.data)
+      const txPage = parseTransactionsPage(txRes.data)
+
+      set({
+        user: user ?? get().user,
+        wallets,
+        rates,
+        transactions: txPage.transactions,
+        transactionCount: txPage.count,
+        isRefreshing: false,
+        error: null,
       })
     } catch {
       set({
-        user: mockUser,
-        wallets: mockWallets,
-        rates: mockRates,
-        transactions: mockTransactions,
-        isLoading: false,
-        isInitialized: true,
+        isRefreshing: false,
+        error: 'Refresh failed. Please try again.',
       })
     }
   },

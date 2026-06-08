@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { AssetIcon } from '@/components/ui/AssetIcon'
 import { useAppStore } from '@/store/useAppStore'
 import { colors } from '@/lib/colors'
 import { formatNgn } from '@/lib/portfolio'
@@ -99,13 +100,14 @@ export function DCAForm({ onSuccess, onClose }: DCAFormProps) {
             key={a}
             type="button"
             onClick={() => setAsset(a)}
-            className="flex-1 rounded-xl py-2.5 text-sm font-semibold transition"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition"
             style={
               asset === a
                 ? { backgroundColor: `${colors.gold}33`, color: colors.ink, boxShadow: `inset 0 0 0 1px ${colors.gold}` }
                 : { backgroundColor: `${colors.ink}08`, color: `${colors.ink}66` }
             }
           >
+            <AssetIcon asset={a} size={20} />
             {a}
           </button>
         ))}

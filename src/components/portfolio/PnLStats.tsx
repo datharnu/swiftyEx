@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { SimulatedBadge } from '@/components/ui/SimulatedBadge'
 import { colors } from '@/lib/colors'
 import type { PnLStats as PnLStatsType } from '@/lib/portfolio'
 import { formatNgn } from '@/lib/portfolio'
@@ -91,12 +92,7 @@ export function PnLStats({ stats }: PnLStatsProps) {
         <h2 className="text-[17px] font-bold" style={{ color: colors.ink }}>
           P&amp;L
         </h2>
-        <span
-          className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-          style={{ backgroundColor: `${colors.gold}33`, color: `${colors.ink}99` }}
-        >
-          Simulated
-        </span>
+        <SimulatedBadge />
       </div>
 
       <div

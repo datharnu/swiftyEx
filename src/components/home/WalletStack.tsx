@@ -1,57 +1,73 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import balanceBg from '../../public/Balance.png'
 import { RatesBanner } from './RatesBanner'
-import type { Rates } from '@/types'
+import { DepositAddress } from '@/components/wallet/DepositAddress'
+import { AssetIcon } from '@/components/ui/AssetIcon'
+import { openBotAction } from '@/lib/bot'
+import { walletTypeToAssetId } from '@/lib/assets'
+import { formatBalance, parseBalance } from '@/lib/format'
+import type { Rates, Wallet, WalletType } from '@/types'
 
-// ── Types ──────────────────────────────────────────────────────────────────
-
-type CardId = 'usd' | 'btc' | 'naira'
-
-interface WalletCard {
-  id: CardId
+interface WalletCardDef {
+  id: WalletType
   label: string
   displayName: string
   currencySymbol: string
-  balance: string
+  isCrypto: boolean
+  matchTypes: WalletType[]
 }
 
-interface WalletStackProps {
-  wallets?: import('@/types').Wallet[]
-  rates?: Rates
-  totalNGN?: string
-  accountName?: string
-  onSetAlert?: () => void
-}
-
-// ── Card Definitions ───────────────────────────────────────────────────────
-
-const CARD_DEFS: WalletCard[] = [
+const CARD_DEFS: WalletCardDef[] = [
+  {
+    id: 'naira',
+    label: 'Naira',
+    displayName: 'Naira Wallet',
+    currencySymbol: '₦',
+    isCrypto: false,
+    matchTypes: ['naira'],
+  },
+  {
+    id: 'usdt',
+    label: 'USDT',
+    displayName: 'USDT Wallet',
+    currencySymbol: '',
+    isCrypto: true,
+    matchTypes: ['usdt'],
+  },
   {
     id: 'usd',
     label: 'USD',
     displayName: 'USD Wallet',
     currencySymbol: '$',
-    balance: '12,420.78',
+    isCrypto: false,
+    matchTypes: ['usd'],
   },
   {
     id: 'btc',
     label: 'BTC',
     displayName: 'BTC Wallet',
     currencySymbol: '₿',
-    balance: '0.00230000',
-  },
-  {
-    id: 'naira',
-    label: 'Naira',
-    displayName: 'Naira Wallet',
-    currencySymbol: '₦',
-    balance: '284,500.00',
+    isCrypto: true,
+    matchTypes: ['btc'],
   },
 ]
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+const MINI_CARD_STYLE: Record<string, { bg: string; text: string; chip: string; icon: string; pattern?: boolean }> = {
+  naira: { bg: '#E4E4E4', text: '#333333', chip: '#E85C6A', icon: '#333333', pattern: true },
+  usdt: { bg: '#111111', text: '#ffffff', chip: '#ffffff', icon: '#ffffff' },
+  usd: { bg: '#1a3a5c', text: '#ffffff', chip: '#ffffff', icon: '#ffffff' },
+  btc: { bg: '#4A9FE8', text: '#ffffff', chip: '#ffffff', icon: '#ffffff' },
+}
+
+interface WalletStackProps {
+  wallets?: Wallet[]
+  rates?: Rates
+  kycVerified?: boolean
+  onSetAlert?: () => void
+}
 
 function BalanceDisplay({
   symbol,
@@ -72,37 +88,24 @@ function BalanceDisplay({
     )
   }
 
-  const cleaned = balance.replace(/,/g, '')
-  const [intPart = '0', decPart = ''] = cleaned.split('.')
-  const whole = Number(intPart).toLocaleString('en-US')
+  const num = parseBalance(balance)
+  const formatted = formatBalance(num, { isCrypto })
 
   if (isCrypto) {
     return (
       <span className="font-mono text-3xl font-bold text-white">
-        {symbol}{whole}.{decPart || '00'}
+        {symbol}{formatted}
       </span>
     )
   }
 
-  const cents = (decPart + '00').slice(0, 2)
-
+  const [whole, cents = '00'] = formatted.split('.')
   return (
     <span className="font-mono font-bold text-white">
       <span className="text-3xl">{symbol}{whole}</span>
       <span className="ml-0.5 text-lg align-top opacity-90">.{cents}</span>
     </span>
   )
-}
-
-// ── Mini card styling ──────────────────────────────────────────────────────
-
-const MINI_CARD_STYLE: Record<
-  CardId,
-  { bg: string; text: string; chip: string; icon: string; pattern?: boolean }
-> = {
-  usd: { bg: '#111111', text: '#ffffff', chip: '#ffffff', icon: '#ffffff' },
-  btc: { bg: '#4A9FE8', text: '#ffffff', chip: '#ffffff', icon: '#ffffff' },
-  naira: { bg: '#E4E4E4', text: '#333333', chip: '#E85C6A', icon: '#333333', pattern: true },
 }
 
 function ChipIcon({ color }: { color: string }) {
@@ -157,6 +160,8 @@ function BalanceHero({
   balance,
   hidden,
   isCrypto,
+  isEmpty,
+  kycVerified,
   onToggleHide,
 }: {
   walletName: string
@@ -164,13 +169,14 @@ function BalanceHero({
   balance: string
   hidden: boolean
   isCrypto: boolean
+  isEmpty: boolean
+  kycVerified?: boolean
   onToggleHide: () => void
 }) {
   return (
     <div
       className="relative mb-2 w-full overflow-hidden rounded-xl"
       style={{
-        // aspectRatio: `${balanceBg.width} / ${balanceBg.height}`,
         backgroundImage: `url(${balanceBg.src})`,
         backgroundSize: '100% 100%',
         backgroundRepeat: 'no-repeat',
@@ -178,26 +184,33 @@ function BalanceHero({
       }}
     >
       <div className="relative flex h-[138px] flex-col justify-center p-6">
-        <div className="">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-[0.15em] font-bold text-white">
-              Total Balance
+        <div>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-bold uppercase tracking-[0.15em] text-white">
+              {isEmpty ? 'Empty wallet' : 'Available balance'}
             </p>
-            <div className="mt-2 flex items-center gap-3">
-              <BalanceDisplay
-                symbol={symbol}
-                balance={balance}
-                hidden={hidden}
-                isCrypto={isCrypto}
-              />
-              <EyeToggleButton hidden={hidden} onToggle={onToggleHide} />
-            </div>
-      
-      <p className="mt-3 text-right  text-sm font-semibold tracking-wide text-white">
-              {walletName}
-            </p>
-
+            {!kycVerified && (
+              <button
+                type="button"
+                onClick={() => openBotAction('kyc')}
+                className="shrink-0 rounded-full bg-amber-400/20 px-2.5 py-0.5 text-[10px] font-semibold text-amber-100 ring-1 ring-amber-300/40 transition active:scale-95"
+              >
+                KYC pending
+              </button>
+            )}
           </div>
+          <div className="mt-2 flex items-center gap-3">
+            <BalanceDisplay
+              symbol={symbol}
+              balance={balance}
+              hidden={hidden}
+              isCrypto={isCrypto}
+            />
+            <EyeToggleButton hidden={hidden} onToggle={onToggleHide} />
+          </div>
+          <p className="mt-3 text-right text-sm font-semibold tracking-wide text-white">
+            {walletName}
+          </p>
         </div>
       </div>
     </div>
@@ -205,24 +218,26 @@ function BalanceHero({
 }
 
 function MiniDebitCard({
-  card,
+  label,
+  cardId,
   selected,
   onClick,
 }: {
-  card: WalletCard
+  label: string
+  cardId: string
   selected: boolean
   onClick: () => void
 }) {
-  const style = MINI_CARD_STYLE[card.id]
+  const style = MINI_CARD_STYLE[cardId] ?? MINI_CARD_STYLE.usdt
 
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={selected}
-      aria-label={`${card.label} wallet`}
+      aria-label={`${label} wallet`}
       className={`relative h-[26px] w-[44px] shrink-0 overflow-hidden rounded-[5px] transition-all active:scale-[0.97] ${
-        selected ? 'ring-2 ring-white/50 ring-offset-2 ring-offset-transparent scale-[1.04]' : 'opacity-90 hover:opacity-100'
+        selected ? 'scale-[1.04] ring-2 ring-white/50 ring-offset-2 ring-offset-transparent' : 'opacity-90 hover:opacity-100'
       }`}
       style={{ background: style.bg }}
     >
@@ -235,89 +250,83 @@ function MiniDebitCard({
           }}
         />
       )}
-
-      <div className="relative flex h-full flex-col justify-between p-1 gap-1">
+      <div className="relative flex h-full flex-col justify-between gap-1 p-1">
         <div className="flex items-center justify-between">
           <ChipIcon color={style.chip} />
           <ContactlessIcon color={style.icon} />
         </div>
-        <span className="text-left text-[9px] font-semibold tracking-wide" style={{ color: style.text }}>
-          {card.label}
-        </span>
+        <div className="flex items-center justify-start">
+          <AssetIcon asset={walletTypeToAssetId(cardId)} size={10} />
+        </div>
       </div>
     </button>
   )
 }
 
-function AddWalletButton() {
-  return (
-    <button
-      type="button"
-      aria-label="Add wallet"
-      className="flex h-[26px] w-[44px] shrink-0 items-center justify-center rounded-[5px] bg-[#111111] transition-all hover:bg-[#222222] active:scale-[0.97]"
-    >
-      <svg width="14" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-        <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-      </svg>
-    </button>
-  )
-}
-
-// ── Main Component ─────────────────────────────────────────────────────────
-
 export default function WalletStack({
-  wallets,
+  wallets = [],
   rates,
-  totalNGN = '284,500.00',
-  accountName: _accountName = 'SwiftyEx User',
+  kycVerified = true,
   onSetAlert,
 }: WalletStackProps) {
-  const [selectedCardId, setSelectedCardId] = useState<CardId>('usd')
+  const activeCards = useMemo(() => {
+    return CARD_DEFS.filter((def) =>
+      wallets.some((w) => def.matchTypes.includes(w.wallet_type)),
+    )
+  }, [wallets])
+
+  const cards = activeCards.length > 0 ? activeCards : CARD_DEFS.slice(0, 3)
+
+  const [selectedId, setSelectedId] = useState<WalletType>(cards[0]?.id ?? 'naira')
   const [hideBalance, setHideBalance] = useState(true)
- 
-  void _accountName
 
-  const cardsWithRealData = CARD_DEFS.map((def) => {
-    const walletKey = def.id === 'usd' ? 'usdt' : def.id
-    const real = wallets?.find((w) => w.wallet_type === walletKey || w.wallet_type === def.id)
-    const balance =
-      def.id === 'naira'
-        ? real?.balance && real.balance !== '0.00'
-          ? real.balance
-          : totalNGN
-        : (real?.balance ?? def.balance)
-    return { ...def, balance }
-  })
+  const selectedDef = cards.find((c) => c.id === selectedId) ?? cards[0]
+  const selectedWallet = wallets.find((w) =>
+    selectedDef?.matchTypes.includes(w.wallet_type),
+  ) ?? null
 
-  const selected = cardsWithRealData.find((c) => c.id === selectedCardId)!
-
-
+  const balance = selectedWallet?.balance ?? '0'
+  const isEmpty = parseBalance(balance) === 0
 
   return (
-    <div className="w-full max-w-md mx-auto pt-5 select-none">
-      <BalanceHero
-        walletName={selected.displayName}
-        symbol={selected.currencySymbol}
-        balance={selected.balance}
-        hidden={hideBalance}
-        isCrypto={selectedCardId === 'btc'}
-        onToggleHide={() => setHideBalance((v) => !v)}
-      />
-     <RatesBanner
-          rates={rates}
-          onSetAlert={onSetAlert}  // ← wire it
-        />
-     
-      <div className="flex items-center gap-3 mx-2 overflow-x-auto py-4 scrollbar-hide">
-        {cardsWithRealData.map((card) => (
+    <div className="mx-auto w-full max-w-md select-none pt-3">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={selectedId}
+          initial={{ opacity: 0, x: 12 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -12 }}
+          transition={{ duration: 0.2 }}
+        >
+          <BalanceHero
+            walletName={selectedDef.displayName}
+            symbol={selectedDef.currencySymbol}
+            balance={balance}
+            hidden={hideBalance}
+            isCrypto={selectedDef.isCrypto}
+            isEmpty={isEmpty}
+            kycVerified={kycVerified}
+            onToggleHide={() => setHideBalance((v) => !v)}
+          />
+        </motion.div>
+      </AnimatePresence>
+
+      <RatesBanner rates={rates} onSetAlert={onSetAlert} lastUpdated={new Date()} />
+
+      <div className="mx-2 flex items-center gap-3 overflow-x-auto py-4 scrollbar-hide">
+        {cards.map((card) => (
           <MiniDebitCard
             key={card.id}
-            card={card}
-            selected={selectedCardId === card.id}
-            onClick={() => setSelectedCardId(card.id)}
+            cardId={card.id}
+            label={card.label}
+            selected={selectedId === card.id}
+            onClick={() => setSelectedId(card.id)}
           />
         ))}
-        <AddWalletButton />
+      </div>
+
+      <div className="mx-2 mb-2">
+        <DepositAddress wallet={selectedWallet} walletLabel={selectedDef.label} />
       </div>
     </div>
   )

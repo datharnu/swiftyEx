@@ -1,6 +1,10 @@
+import { EmptyState } from '@/components/ui/EmptyState'
+import { AssetIconBadge } from '@/components/ui/AssetIcon'
+import { holdingIdToAsset } from '@/lib/assets'
 import { colors } from '@/lib/colors'
 import type { Holding } from '@/lib/portfolio'
 import { formatBalance, formatNgn } from '@/lib/portfolio'
+import { PieChart } from 'lucide-react'
 
 interface HoldingsListProps {
   holdings: Holding[]
@@ -13,12 +17,11 @@ function HoldingRow({ holding }: { holding: Holding }) {
   return (
     <li className="py-4">
       <div className="flex items-center gap-3.5">
-        <div
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold"
-          style={{ backgroundColor: holding.color, color: colors.white }}
-        >
-          {holding.symbol}
-        </div>
+        <AssetIconBadge
+          asset={holdingIdToAsset(holding.id)}
+          size={32}
+          bgClassName="bg-white ring-1 ring-zinc-100"
+        />
 
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-2">
@@ -81,6 +84,12 @@ export function HoldingsList({ holdings, loading }: HoldingsListProps) {
             />
           ))}
         </div>
+      ) : holdings.every((h) => h.valueNgn === 0) ? (
+        <EmptyState
+          icon={<PieChart className="size-6" />}
+          title="No holdings yet"
+          description="Deposit funds to your wallets to see allocation breakdown here."
+        />
       ) : (
         <ul className="mt-2 divide-y" style={{ borderColor: `${colors.ink}0D` }}>
           {holdings.map((h) => (

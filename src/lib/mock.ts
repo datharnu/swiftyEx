@@ -1,23 +1,31 @@
-// TODO: remove when real API sandbox is available
-// Replace each function call in components with the real api.ts equivalent
+/**
+ * Simulated demo data for features without hackathon API endpoints.
+ *
+ * Live API data (user, wallets, transactions, rates) comes from `src/lib/api.ts`.
+ * Import from this file only for SIMULATED features — see `src/lib/data-source.ts`.
+ */
 
 import type { DCAplan, PriceAlert, Transaction, Wallet } from '@/types'
 
+/** Dev-only fallback when Telegram initData / API is unavailable */
 export const mockUser = {
   chat_id: 123456789,
   username: 'datharnu',
   first_name: 'Emmanuel',
   kyc_verified: false,
   kyc_level: 0,
-  referral_code: 'iYM00P',
+  referral_code: 'DEMO123',
 }
 
+/** Dev-only — not used when live wallets API succeeds */
 export const mockWallets: Wallet[] = [
   { wallet_type: 'btc', blockchain: 'bitcoin', balance: '0.00230000', deposit_address: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh' },
   { wallet_type: 'usdt', blockchain: 'tron', balance: '12420.78', deposit_address: 'TXyzABCDEF1234567890' },
+  { wallet_type: 'usd', blockchain: 'usd', balance: '500.00', deposit_address: null },
   { wallet_type: 'naira', blockchain: null, balance: '284500.00', deposit_address: '0123456789' },
 ]
 
+/** Fallback rates shape — live rates merged in api.ts; BTC/ETH filled when API omits them */
 export const mockRates = {
   USD: { buy: '1430.00', sell: '1340.00' },
   BTC: { buy: '76560.66', sell: '76200.00' },
@@ -25,21 +33,16 @@ export const mockRates = {
   USDT: { buy: '1430.00', sell: '1340.00' },
 }
 
+/** Dev-only transaction samples */
 export const mockTransactions: Transaction[] = [
   { id: '1', type: 'buy', asset: 'BTC', amount: '0.000062', amount_ngn: '5000', date: '2026-06-08T09:34:00', is_dca: true },
   { id: '2', type: 'swap', asset: 'USDT', amount: '20.00', amount_ngn: '28600', date: '2026-06-08T08:12:00', is_dca: false },
   { id: '3', type: 'sell', asset: 'BTC', amount: '0.0010', amount_ngn: '76500', date: '2026-06-07T16:45:00', is_dca: false },
   { id: '4', type: 'buy', asset: 'USDT', amount: '50.00', amount_ngn: '71500', date: '2026-06-07T11:20:00', is_dca: false },
   { id: '5', type: 'deposit', asset: 'USDT', amount: '100.00', amount_ngn: '143000', date: '2026-06-06T14:30:00', is_dca: false },
-  { id: '6', type: 'buy', asset: 'ETH', amount: '0.015', amount_ngn: '32000', date: '2026-06-06T10:05:00', is_dca: false },
-  { id: '7', type: 'withdrawal', asset: 'USDT', amount: '30.00', amount_ngn: '42900', date: '2026-06-05T18:22:00', is_dca: false },
-  { id: '8', type: 'buy', asset: 'BTC', amount: '0.0005', amount_ngn: '38000', date: '2026-06-05T09:15:00', is_dca: true },
-  { id: '9', type: 'swap', asset: 'BTC', amount: '0.0008', amount_ngn: '61200', date: '2026-06-04T13:40:00', is_dca: false },
-  { id: '10', type: 'sell', asset: 'USDT', amount: '75.00', amount_ngn: '100500', date: '2026-06-03T17:55:00', is_dca: false },
-  { id: '11', type: 'buy', asset: 'USDT', amount: '25.00', amount_ngn: '35750', date: '2026-06-02T12:08:00', is_dca: false },
-  { id: '12', type: 'sell', asset: 'ETH', amount: '0.02', amount_ngn: '42000', date: '2026-06-01T08:30:00', is_dca: false },
 ]
 
+/** SIMULATED — price alerts (Actions tab) */
 export const mockAlerts: PriceAlert[] = [
   {
     id: 'alert-1',
@@ -61,6 +64,7 @@ export const mockAlerts: PriceAlert[] = [
   },
 ]
 
+/** SIMULATED — DCA plans (Actions tab) */
 export const mockDCAPlans: DCAplan[] = [
   {
     id: 'dca-1',
@@ -84,6 +88,7 @@ export const mockDCAPlans: DCAplan[] = [
   },
 ]
 
+/** SIMULATED — referral earnings & leaderboard (referral_code comes from live /me) */
 export const mockReferral = {
   total_invited: 12,
   total_earned: '4200.00',

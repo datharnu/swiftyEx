@@ -1,4 +1,10 @@
-import type { Transaction } from '@/types'
+'use client'
+
+import { motion } from 'framer-motion'
+import { ArrowLeftRight, Clock } from 'lucide-react'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { AssetIconBadge } from '@/components/ui/AssetIcon'
+import type { Transaction, TransactionStatus } from '@/types'
 
 export const TRANSACTION_PREVIEW_LIMIT = 4
 
@@ -16,6 +22,18 @@ export function formatTransactionDate(iso: string) {
     return 'Yesterday'
   }
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+export function formatGroupDate(iso: string) {
+  const date = new Date(iso)
+  const now = new Date()
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const startOfYesterday = new Date(startOfToday)
+  startOfYesterday.setDate(startOfYesterday.getDate() - 1)
+
+  if (date >= startOfToday) return 'Today'
+  if (date >= startOfYesterday) return 'Yesterday'
+  return date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
 }
 
 export function formatAmount(type: Transaction['type'], amountNgn: string) {
@@ -42,84 +60,118 @@ function transactionCategory(tx: Transaction) {
   return labels[tx.type]
 }
 
-function AssetIcon({ asset }: { asset: string }) {
-  const key = asset.toUpperCase()
+const STATUS_STYLES: Record<TransactionStatus, { bg: string; text: string; label: string }> = {
+  completed: { bg: 'bg-emerald-50', text: 'text-emerald-700', label: 'Completed' },
+  pending: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Pending' },
+  processing: { bg: 'bg-blue-50', text: 'text-blue-700', label: 'Processing' },
+  failed: { bg: 'bg-rose-50', text: 'text-rose-700', label: 'Failed' },
+}
 
-  if (key === 'BTC') {
-    return (
-      <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden>
-        <circle cx="16" cy="16" r="16" fill="#F7931A" />
-        <path
-          d="M18.5 14.5c.3-2-1.2-3-3.3-3.7l.7-2.7-1.6-.4-.7 2.6c-.4-.1-.9-.2-1.3-.3l.7-2.7-1.6-.4-.7 2.7c-.3-.1-.7-.1-1-.2l-2.2-.6-.4 1.7s1.2.3 1.2.3c.7.2.8.6.8 1l-.8 3.2c0 .1.1.2.2.2h-.2l-1.1 4.5c-.1.2-.3.5-.8.4 0 0-1.2-.3-1.2-.3l-.8 1.9 2.1.5c.4.1.8.2 1.2.3l-.7 2.8 1.6.4.7-2.7c.4.1.9.2 1.3.3l-.7 2.7 1.6.4.7-2.8c2.9.5 5.1.3 6-2.3.7-2-.1-3.2-1.5-4 1.1-.3 1.9-1 2.1-2.5zm-3.8 5.3c-.5 2.1-4 .9-5.1.7l.9-3.7c1.1.3 4.7.8 4.2 3zm.5-5.4c-.5 1.9-3.5.9-4.5.7l.8-3.3c1 .3 4.2.7 3.7 2.6z"
-          fill="white"
-        />
-      </svg>
-    )
-  }
-
-  if (key === 'USDT') {
-    return (
-      <span className="text-sm font-bold text-white" aria-hidden>
-        ₮
-      </span>
-    )
-  }
-
-  if (key === 'ETH') {
-    return (
-      <svg width="14" height="22" viewBox="0 0 16 26" fill="none" aria-hidden>
-        <path d="M8 0L8.2 0.7V17.5L8 17.7L0 13.5L8 0Z" fill="white" fillOpacity="0.6" />
-        <path d="M8 0L16 13.5L8 17.7V0Z" fill="white" />
-        <path d="M8 19.2L8.2 19V22.8L8 23.6L0 14.8L8 19.2Z" fill="white" fillOpacity="0.6" />
-        <path d="M8 23.6V19.2L16 14.8L8 23.6Z" fill="white" />
-      </svg>
-    )
-  }
-
+function StatusBadge({ status }: { status?: TransactionStatus }) {
+  const style = STATUS_STYLES[status ?? 'completed']
   return (
-    <span className="text-xs font-bold text-white" aria-hidden>
-      {asset.slice(0, 3)}
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${style.bg} ${style.text}`}>
+      {style.label}
     </span>
   )
 }
 
-function TransactionRow({ tx }: { tx: Transaction }) {
-  const iconBg =
-    tx.asset.toUpperCase() === 'USDT'
-      ? 'bg-[#1a1a1a]'
-      : tx.asset.toUpperCase() === 'BTC'
-        ? 'bg-[#1a1a1a]'
-        : 'bg-gradient-to-br from-zinc-500 to-zinc-700'
+function TransactionRow({ tx, index }: { tx: Transaction; index: number }) {
+  const amountColor =
+    tx.type === 'buy' || tx.type === 'withdrawal' ? 'text-zinc-900' : 'text-emerald-600'
 
   return (
-    <li className="flex items-center gap-3.5 py-4">
-      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${iconBg}`}>
-        <AssetIcon asset={tx.asset} />
-      </div>
+    <motion.li
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.04, duration: 0.25 }}
+      className="flex items-center gap-3.5 py-4"
+    >
+      <AssetIconBadge asset={tx.asset} size={40} bgClassName="bg-white ring-1 ring-zinc-100" />
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13.5px] font-semibold text-zinc-900">{transactionTitle(tx)}</p>
+        <div className="flex items-center gap-2">
+          <p className="truncate text-[13.5px] font-semibold text-zinc-900">{transactionTitle(tx)}</p>
+          <StatusBadge status={tx.status} />
+        </div>
         <p className="text-xs text-zinc-400">{transactionCategory(tx)}</p>
       </div>
 
       <div className="shrink-0 text-right">
-        <p className="text-[13.5px] font-semibold text-zinc-900">{formatAmount(tx.type, tx.amount_ngn)}</p>
+        <p className={`text-[13.5px] font-semibold ${amountColor}`}>
+          {formatAmount(tx.type, tx.amount_ngn)}
+        </p>
         <p className="text-xs text-zinc-400">{formatTransactionDate(tx.date)}</p>
       </div>
-    </li>
+    </motion.li>
   )
 }
 
-export function TransactionList({ transactions }: { transactions: Transaction[] }) {
-  if (transactions.length === 0) {
-    return <p className="py-8 text-center text-sm text-zinc-400">No transactions yet</p>
+export function groupTransactionsByDate(transactions: Transaction[]) {
+  const groups = new Map<string, Transaction[]>()
+
+  for (const tx of transactions) {
+    const key = formatGroupDate(tx.date)
+    const list = groups.get(key) ?? []
+    list.push(tx)
+    groups.set(key, list)
   }
 
+  return Array.from(groups.entries())
+}
+
+interface TransactionListProps {
+  transactions: Transaction[]
+  grouped?: boolean
+  emptyTitle?: string
+  emptyDescription?: string
+}
+
+export function TransactionList({
+  transactions,
+  grouped = false,
+  emptyTitle = 'No transactions yet',
+  emptyDescription = 'Your buy, sell, and deposit activity will show up here once you start trading.',
+}: TransactionListProps) {
+  if (transactions.length === 0) {
+    return (
+      <EmptyState
+        icon={<ArrowLeftRight className="size-6" />}
+        title={emptyTitle}
+        description={emptyDescription}
+      />
+    )
+  }
+
+  if (!grouped) {
+    return (
+      <ul className="divide-y divide-zinc-100">
+        {transactions.map((tx, i) => (
+          <TransactionRow key={tx.id} tx={tx} index={i} />
+        ))}
+      </ul>
+    )
+  }
+
+  const groups = groupTransactionsByDate(transactions)
+
   return (
-    <ul className="divide-y divide-zinc-100">
-      {transactions.map((tx) => (
-        <TransactionRow key={tx.id} tx={tx} />
+    <div className="space-y-2">
+      {groups.map(([dateLabel, items]) => (
+        <div key={dateLabel}>
+          <div className="sticky top-14 z-10 flex items-center gap-2 bg-white/95 py-2 backdrop-blur-sm">
+            <Clock className="size-3.5 text-zinc-400" />
+            <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
+              {dateLabel}
+            </p>
+          </div>
+          <ul className="divide-y divide-zinc-100">
+            {items.map((tx, i) => (
+              <TransactionRow key={tx.id} tx={tx} index={i} />
+            ))}
+          </ul>
+        </div>
       ))}
-    </ul>
+    </div>
   )
 }

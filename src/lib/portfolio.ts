@@ -29,6 +29,7 @@ export interface PnLStats {
 const RATE_KEY: Record<string, keyof Rates> = {
   btc: 'BTC',
   usdt: 'USDT',
+  usd: 'USD',
   ethereum: 'ETH',
 }
 
@@ -58,14 +59,11 @@ export function computeHoldings(wallets: Wallet[], rates: Rates): Holding[] {
     { id: 'naira', label: 'Naira', symbol: '₦', color: colors.teal },
   ]
 
-  const walletKey: Record<Holding['id'], Wallet['wallet_type'] | 'usdt'> = {
-    btc: 'btc',
-    usd: 'usdt',
-    naira: 'naira',
-  }
-
   const holdings = defs.map((def) => {
-    const wallet = wallets.find((w) => w.wallet_type === walletKey[def.id])
+    const wallet =
+      def.id === 'usd'
+        ? wallets.find((w) => w.wallet_type === 'usdt' || w.wallet_type === 'usd')
+        : wallets.find((w) => w.wallet_type === def.id)
     const balance = wallet?.balance ?? '0'
     const valueNgn = wallet ? walletValueNgn(wallet, rates) : 0
     return { ...def, balance, valueNgn, percent: 0 }
