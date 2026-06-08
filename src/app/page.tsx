@@ -41,7 +41,7 @@ export default function HomePage() {
           <DashboardSkeleton />
         ) : (
           <>
-            <div className="px-2">
+            <div className="px-6">
               <WalletStack
                 wallets={wallets}
                 rates={rates ?? mockRates}
