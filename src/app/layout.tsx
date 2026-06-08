@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
+import { ApiDebugPanel } from '@/components/debug/ApiDebugPanel'
 import { AppDataProvider } from '@/components/providers/AppDataProvider'
 import './globals.css'
 
@@ -26,7 +27,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="font-sans antialiased text-white">
         <div className="relative mx-auto min-h-dvh w-full max-w-app bg-white shadow-2xl shadow-black/40">
-          <AppDataProvider>{children}</AppDataProvider>
+          <AppDataProvider>
+            {children}
+            <ApiDebugPanel />
+          </AppDataProvider>
         </div>
       </body>
     </html>
