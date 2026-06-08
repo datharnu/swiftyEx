@@ -62,7 +62,6 @@ export function RatesBanner({
   rates,
   asset = 'USDT',
   onSetAlert,
-  lastUpdated,
   className = '',
 }: RatesBannerProps) {
   const pair = rates?.[asset] ?? { buy: '1430.00', sell: '1340.00' }
