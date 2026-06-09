@@ -46,18 +46,18 @@ function ChartIcon({ active }: { active: boolean }) {
   )
 }
 
-function SparkleIcon({ active }: { active: boolean }) {
-  const fill = active ? '#7C3AED' : '#C4C4C4'
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M12 2l1.5 5.5L19 9l-5.5 1.5L12 16l-1.5-5.5L5 9l5.5-1.5L12 2z"
-        fill={fill}
-      />
-      <path d="M19 14l.8 2.8L22.5 18l-2.7.7L19 21.5l-.8-2.8L15.5 18l2.7-.7L19 14z" fill={fill} opacity={active ? 1 : 0.6} />
-    </svg>
-  )
-}
+// function SparkleIcon({ active }: { active: boolean }) {
+//   const fill = active ? '#7C3AED' : '#C4C4C4'
+//   return (
+//     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+//       <path
+//         d="M12 2l1.5 5.5L19 9l-5.5 1.5L12 16l-1.5-5.5L5 9l5.5-1.5L12 2z"
+//         fill={fill}
+//       />
+//       <path d="M19 14l.8 2.8L22.5 18l-2.7.7L19 21.5l-.8-2.8L15.5 18l2.7-.7L19 14z" fill={fill} opacity={active ? 1 : 0.6} />
+//     </svg>
+//   )
+// }
 
 function WorkflowIcon({ active }: { active: boolean }) {
   const fill = active ? '#7C3AED' : '#C4C4C4'
