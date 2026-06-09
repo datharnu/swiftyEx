@@ -70,6 +70,8 @@
 //   )
 // }
 
+
+
 'use client'
 
 import { useState } from 'react'
@@ -80,29 +82,26 @@ import { DepositAddress } from '@/components/wallet/DepositAddress'
 import { openBotAction } from '@/lib/bot'
 import type { Wallet, WalletType } from '@/types'
 
-export function DepositSheet({
-  wallets,
-  onClose,
-}: {
-  wallets: Wallet[]
-  onClose: () => void
-}) {
+export function DepositSheet({ wallets, onClose }: { wallets: Wallet[]; onClose: () => void }) {
   const [selected, setSelected] = useState<WalletType>(
     wallets[0]?.wallet_type ?? 'usdt',
   )
 
+  const [loading, setLoading] = useState(false)
   const [step, setStep] = useState<'idle' | 'loading' | 'ready'>('idle')
 
   const wallet = wallets.find((w) => w.wallet_type === selected) ?? null
   const isNaira = selected === 'naira'
 
   const handleNairaDeposit = async () => {
+    setLoading(true)
     setStep('loading')
 
     // simulate processing (UX delay for realism)
     await new Promise((r) => setTimeout(r, 1200))
 
     setStep('ready')
+    setLoading(false)
 
     // optional: then open bot after UX feedback
     setTimeout(() => {
@@ -116,7 +115,6 @@ export function DepositSheet({
         <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
           <ArrowDownLeft className="size-5" />
         </div>
-
         <div>
           <h2 className="text-lg font-bold text-zinc-900">Deposit funds</h2>
           <p className="text-sm text-zinc-400">Add money to your wallet</p>
@@ -127,21 +125,17 @@ export function DepositSheet({
         Select wallet
       </p>
 
-      <WalletPicker
-        wallets={wallets}
-        value={selected}
-        onChange={setSelected}
-      />
+      <WalletPicker wallets={wallets} value={selected} onChange={setSelected} />
 
       <div className="mt-5">
         {isNaira ? (
           <div className="rounded-2xl border border-zinc-100 bg-zinc-50 p-4 transition-all">
+
             {step === 'idle' && (
               <>
                 <p className="text-sm font-medium text-zinc-800">
                   Naira bank deposit
                 </p>
-
                 <p className="mt-2 text-sm text-zinc-500">
                   Get your dedicated bank account details instantly.
                 </p>
@@ -159,11 +153,9 @@ export function DepositSheet({
             {step === 'loading' && (
               <div className="flex flex-col items-center py-6 text-center">
                 <Loader2 className="size-6 animate-spin text-zinc-500" />
-
                 <p className="mt-3 text-sm text-zinc-600">
                   Fetching your bank details...
                 </p>
-
                 <p className="text-xs text-zinc-400">
                   Preparing secure deposit account
                 </p>
@@ -173,11 +165,9 @@ export function DepositSheet({
             {step === 'ready' && (
               <div className="flex flex-col items-center py-6 text-center">
                 <CheckCircle2 className="size-6 text-green-500" />
-
                 <p className="mt-3 text-sm font-medium text-zinc-800">
                   Bank details ready
                 </p>
-
                 <p className="text-xs text-zinc-500">
                   Opening in Swifty bot...
                 </p>
