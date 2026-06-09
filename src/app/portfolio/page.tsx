@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { StatusBar } from '@/components/layout/StatusBar'
+import { SimulationBanner } from '@/components/layout/SimulationBanner'
 import { AccountStats } from '@/components/portfolio/AccountStats'
 import { HoldingsList } from '@/components/portfolio/HoldingsList'
 import { PnLStats } from '@/components/portfolio/PnLStats'
@@ -32,6 +33,7 @@ export default function PortfolioPage() {
   return (
     <main className="min-h-screen pb-20" style={{ backgroundColor: colors.white }}>
       <StatusBar />
+      <SimulationBanner />
 
       <PullToRefresh onRefresh={refreshAppData} isRefreshing={isRefreshing}>
         <div className="px-6 pt-2">
@@ -51,7 +53,7 @@ export default function PortfolioPage() {
           className="-mt-1 space-y-6 px-6 pb-5 pt-6"
           style={{ backgroundColor: colors.white }}
         >
-          <TotalValue totalNgn={totalNgn} loading={isLoading} />
+          {/* <TotalValue totalNgn={totalNgn} loading={isLoading} /> */}
           <AccountStats
             user={user}
             totalNgn={totalNgn}

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { API_BASE_URL, pingAllEndpoints } from '@/lib/api'
 import { API_ENDPOINTS, formatJson, isApiDebugEnabled } from '@/lib/apiDebug'
 import { useApiDebugStore } from '@/store/useApiDebugStore'
+import { useAppStore } from '@/store/useAppStore'
 import type { ApiLogEntry, EndpointStatus } from '@/store/useApiDebugStore'
 
 export function ApiDebugPanel() {
@@ -13,6 +14,9 @@ export function ApiDebugPanel() {
   const setPanelOpen = useApiDebugStore((s) => s.setPanelOpen)
   const clearLogs = useApiDebugStore((s) => s.clearLogs)
   const getEndpointStatuses = useApiDebugStore((s) => s.getEndpointStatuses)
+
+  const simulationMode = useAppStore((s) => s.simulationMode)
+  const setSimulationMode = useAppStore((s) => s.setSimulationMode)
 
   const [pinging, setPinging] = useState(false)
   const endpointStatuses = getEndpointStatuses()
@@ -85,6 +89,36 @@ export function ApiDebugPanel() {
                 </button>
               </div>
             </header>
+
+            {/* Simulation controls */}
+            <div className="border-b border-zinc-800 px-4 py-3 bg-zinc-900/40">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
+                    Simulation &amp; Demo Mode
+                  </p>
+                  <p className="mt-0.5 text-[9px] text-zinc-500">
+                    Seeds mock balances &amp; history when live endpoints are empty.
+                  </p>
+                </div>
+                <div className="flex rounded-lg bg-zinc-900 p-0.5 border border-zinc-800 shrink-0 select-none">
+                  {(['auto', 'forced', 'off'] as const).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setSimulationMode(m)}
+                      className={`rounded-md px-3 py-1 text-[10px] font-bold capitalize transition-all ${
+                        simulationMode === m
+                          ? 'bg-amber-500 text-black shadow'
+                          : 'text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
 
             <div className="border-b border-zinc-800 px-4 py-3">
               <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">

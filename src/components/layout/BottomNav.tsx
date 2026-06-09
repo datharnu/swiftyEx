@@ -16,7 +16,7 @@ const navItems = [
   {
     href: '/actions',
     label: 'Actions',
-    icon: (active: boolean) => <SparkleIcon active={active} />,
+    icon: (active: boolean) => <WorkflowIcon active={active} />,
   },
   {
     href: '/referral',
@@ -26,7 +26,7 @@ const navItems = [
 ] as const
 
 function GridIcon({ active }: { active: boolean }) {
-  const fill = active ? '#111111' : '#C4C4C4'
+  const fill = active ? '#EED868' : '#C4C4C4'
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
       <rect x="3" y="3" width="8" height="8" rx="2" fill={fill} />
@@ -38,7 +38,7 @@ function GridIcon({ active }: { active: boolean }) {
 }
 
 function ChartIcon({ active }: { active: boolean }) {
-  const stroke = active ? '#111111' : '#C4C4C4'
+  const stroke = active ? '#377CC8' : '#C4C4C4'
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path d="M4 20V10M10 20V4M16 20v-6M22 20V8" stroke={stroke} strokeWidth="2" strokeLinecap="round" />
@@ -59,8 +59,34 @@ function SparkleIcon({ active }: { active: boolean }) {
   )
 }
 
+function WorkflowIcon({ active }: { active: boolean }) {
+  const fill = active ? '#7C3AED' : '#C4C4C4'
+
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+      {/* Top node */}
+      <circle cx="6" cy="6" r="2" fill={fill} />
+
+      {/* Bottom node */}
+      <circle cx="18" cy="18" r="2" fill={fill} />
+
+      {/* Middle node */}
+      <circle cx="18" cy="6" r="2" fill={fill} />
+
+      {/* Connection lines */}
+      <path
+        d="M8 6h8M18 8v8M8 6c0 4 4 8 8 8"
+        stroke={fill}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        opacity={active ? 1 : 0.6}
+      />
+    </svg>
+  )
+}
+
 function GiftIcon({ active }: { active: boolean }) {
-  const stroke = active ? '#111111' : '#C4C4C4'
+  const stroke = active ? '#469B88' : '#C4C4C4'
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
       <rect x="3" y="10" width="18" height="11" rx="2" stroke={stroke} strokeWidth="2" />

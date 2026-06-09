@@ -4,9 +4,11 @@ import { useState } from 'react'
 import { AlertSheet } from '@/components/home/AlertSheet'
 import { QuickActions } from '@/components/home/QuickActions'
 import { RecentActivity } from '@/components/home/RecentActivity'
+import { PulseEntryCard } from '@/components/home/PulseEntryCard'
 import WalletStack from '@/components/home/WalletStack'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { StatusBar } from '@/components/layout/StatusBar'
+import { SimulationBanner } from '@/components/layout/SimulationBanner'
 import { DashboardSkeleton } from '@/components/ui/Skeleton'
 import { PullToRefresh } from '@/components/ui/PullToRefresh'
 import { ErrorState } from '@/components/ui/ErrorState'
@@ -31,6 +33,7 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       <StatusBar />
+      <SimulationBanner />
 
       <PullToRefresh onRefresh={refreshAppData} isRefreshing={isRefreshing}>
         {showError ? (
@@ -51,6 +54,8 @@ export default function HomePage() {
             </div>
 
             <QuickActions wallets={wallets} rates={rates ?? mockRates} />
+
+            <PulseEntryCard />
 
             <RecentActivity transactions={transactions} />
           </>

@@ -25,7 +25,7 @@ export function DepositAddress({ wallet, walletLabel }: DepositAddressProps) {
   }
 
   return (
-    <div className="rounded-2xl border border-zinc-100 bg-zinc-50/80 p-4">
+    <div className="rounded-2xl border border-zinc-100 bg-zinc-200/30 p-4">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-400">

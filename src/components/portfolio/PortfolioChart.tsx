@@ -98,7 +98,7 @@ export function PortfolioChart({ totalNgn }: PortfolioChartProps) {
   return (
     <section
       className="px-5 pb-6 pt-3"
-      style={{ backgroundColor: colors.blue }}
+      style={{ backgroundColor: '#28231d' }}
     >
       {/* Range selector */}
       <div className="flex items-center justify-between gap-1">
