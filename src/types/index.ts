@@ -34,6 +34,7 @@ export interface Wallet {
 export type TransactionStatus = 'completed' | 'pending' | 'failed' | 'processing'
 
 export interface Transaction {
+  success?: boolean
   id: string
   type: 'buy' | 'sell' | 'swap' | 'deposit' | 'withdrawal'
   asset: string
