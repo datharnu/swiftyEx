@@ -183,6 +183,7 @@ export function DepositSheet({ wallets, onClose }: { wallets: Wallet[]; onClose:
       </div>
 
       <button
+        disabled={loading || step === 'loading' || step === 'ready'}
         type="button"
         onClick={onClose}
         className="mt-5 w-full rounded-xl border border-zinc-200 py-3 text-sm font-semibold text-zinc-600 transition hover:bg-zinc-50"
