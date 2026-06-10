@@ -78,6 +78,7 @@ export function AlertSheet({ open, onClose, rates }: AlertSheetProps) {
   return (
     <>
       {/* Backdrop */}
+      
       <div
         className={`fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 ${
           open ? 'opacity-100' : 'pointer-events-none opacity-0'
@@ -87,7 +88,7 @@ export function AlertSheet({ open, onClose, rates }: AlertSheetProps) {
 
       {/* Sheet */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl bg-white px-5 pb-10 pt-3 shadow-2xl transition-transform duration-[350ms] ease-[cubic-bezier(0.34,1.1,0.64,1)] ${
+        className={`fixed bottom-0 left-0 right-0 w-full max-w-app mx-auto z-50 rounded-t-3xl bg-white px-5 pb-10 pt-3 shadow-2xl transition-transform duration-[350ms] ease-[cubic-bezier(0.34,1.1,0.64,1)] ${
           open ? 'translate-y-0' : 'translate-y-full'
         }`}
       >
