@@ -160,31 +160,31 @@ export const useAppStore = create<AppStore>((set, get) => ({
     try {
       const res = await getTransactions(page, wallet_type)
       const parsed = parseTransactionsPage(res.data)
-      
+
       // Filter out failed transactions
       const successfulTransactions = parsed.transactions.filter(tx => tx.success !== false)
-  
+
       const mode = get().simulationMode
       const hasNoSuccessfulTransactions = !successfulTransactions.length
-      const shouldSimulate = mode === 'forced' || (mode === 'auto' && hasNoSuccessfulTransactions)
-  
+      const shouldSimulate = get().isCurrentlySimulated || mode === 'forced' || (mode === 'auto' && hasNoSuccessfulTransactions)
+
       if (shouldSimulate) {
         const filtered = wallet_type
           ? mockTransactions.filter((t) => {
-              if (wallet_type === 'usdt') return t.asset === 'USDT'
-              if (wallet_type === 'btc') return t.asset === 'BTC'
-              if (wallet_type === 'naira') return t.type === 'deposit' || t.type === 'withdrawal'
-              return true
-            })
+            if (wallet_type === 'usdt') return t.asset === 'USDT'
+            if (wallet_type === 'btc') return t.asset === 'BTC'
+            if (wallet_type === 'naira') return t.type === 'deposit' || t.type === 'withdrawal'
+            return true
+          })
           : mockTransactions
-  
+
         return {
           transactions: filtered,
           has_next: false,
           count: filtered.length,
         }
       }
-  
+
       return {
         transactions: successfulTransactions,
         has_next: parsed.has_next,
@@ -194,16 +194,16 @@ export const useAppStore = create<AppStore>((set, get) => ({
       if (!isDevMockFallbackEnabled() && get().simulationMode !== 'forced' && get().simulationMode !== 'auto') {
         return { transactions: [], has_next: false, count: 0 }
       }
-  
+
       const filtered = wallet_type
         ? mockTransactions.filter((t) => {
-            if (wallet_type === 'usdt') return t.asset === 'USDT'
-            if (wallet_type === 'btc') return t.asset === 'BTC'
-            if (wallet_type === 'naira') return t.type === 'deposit' || t.type === 'withdrawal'
-            return true
-          })
+          if (wallet_type === 'usdt') return t.asset === 'USDT'
+          if (wallet_type === 'btc') return t.asset === 'BTC'
+          if (wallet_type === 'naira') return t.type === 'deposit' || t.type === 'withdrawal'
+          return true
+        })
         : mockTransactions
-  
+
       return {
         transactions: filtered,
         has_next: false,
@@ -293,9 +293,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   fetchAppData: async () => {
     if (get().isLoading) return
-  
+
     set({ isLoading: true, error: null })
-  
+
     try {
       const [meRes, walletsRes, ratesRes, txRes] = await Promise.all([
         getMe(),
@@ -303,27 +303,27 @@ export const useAppStore = create<AppStore>((set, get) => ({
         getRates(),
         getTransactions(1, ''),
       ])
-  
+
       const user = parseUserResponse(meRes.data)
       const wallets = parseWalletsResponse(walletsRes.data)
       const rates = parseRatesResponse(ratesRes.data)
       const txPage = parseTransactionsPage(txRes.data)
-      
+
       // Filter out failed transactions
       const successfulTransactions = txPage.transactions.filter(tx => tx.success !== false)
-  
+
       const mode = get().simulationMode
       const hasNoBalances = !wallets.length || wallets.every(w => Number(w.balance || 0) === 0)
       const hasNoSuccessfulTransactions = !successfulTransactions.length
       const shouldSimulate = mode === 'forced' || (mode === 'auto' && (hasNoBalances || hasNoSuccessfulTransactions))
-  
+
       if (shouldSimulate) {
         set({
           user: user || mockUser,
           wallets: (mode === 'forced' || hasNoBalances) ? mockWallets : wallets,
           rates: rates || mockRates,
-          transactions: (mode === 'forced' || hasNoSuccessfulTransactions) ? mockTransactions : successfulTransactions,
-          transactionCount: (mode === 'forced' || hasNoSuccessfulTransactions) ? mockTransactions.length : txPage.count,
+          transactions: mockTransactions,
+          transactionCount: mockTransactions.length,
           isCurrentlySimulated: true,
           isLoading: false,
           isInitialized: true,
@@ -331,7 +331,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
         })
         return
       }
-  
+
       set({
         user,
         wallets,
@@ -358,7 +358,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
         })
         return
       }
-  
+
       set({
         user: null,
         wallets: [],
@@ -389,18 +389,21 @@ export const useAppStore = create<AppStore>((set, get) => ({
       const rates = parseRatesResponse(ratesRes.data)
       const txPage = parseTransactionsPage(txRes.data)
 
+      // Filter out failed transactions
+      const successfulTransactions = txPage.transactions.filter(tx => tx.success !== false)
+
       const mode = get().simulationMode
       const hasNoBalances = !wallets.length || wallets.every(w => Number(w.balance || 0) === 0)
-      const hasNoTransactions = !txPage.transactions.length
-      const shouldSimulate = mode === 'forced' || (mode === 'auto' && (hasNoBalances || hasNoTransactions))
+      const hasNoSuccessfulTransactions = !successfulTransactions.length
+      const shouldSimulate = mode === 'forced' || (mode === 'auto' && (hasNoBalances || hasNoSuccessfulTransactions))
 
       if (shouldSimulate) {
         set({
           user: user ?? get().user ?? mockUser,
           wallets: (mode === 'forced' || hasNoBalances) ? mockWallets : wallets,
           rates,
-          transactions: (mode === 'forced' || hasNoTransactions) ? mockTransactions : txPage.transactions,
-          transactionCount: (mode === 'forced' || hasNoTransactions) ? mockTransactions.length : txPage.count,
+          transactions: mockTransactions,
+          transactionCount: mockTransactions.length,
           isCurrentlySimulated: true,
           isRefreshing: false,
           error: null,
@@ -412,7 +415,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
         user: user ?? get().user,
         wallets,
         rates,
-        transactions: txPage.transactions,
+        transactions: successfulTransactions,
         transactionCount: txPage.count,
         isCurrentlySimulated: false,
         isRefreshing: false,
