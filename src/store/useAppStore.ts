@@ -1,3 +1,308 @@
+// import { create } from 'zustand'
+// import {
+//   getMe,
+//   getRates,
+//   getTransactions,
+//   getWallets,
+//   parseRatesResponse,
+//   parseTransactionsPage,
+//   parseUserResponse,
+//   parseWalletsResponse,
+// } from '@/lib/api'
+// import { isDevMockFallbackEnabled } from '@/lib/data-source'
+// import {
+//   mockAlerts,
+//   mockDCAPlans,
+//   mockRates,
+//   mockTransactions,
+//   mockUser,
+//   mockWallets,
+// } from '@/lib/mock'
+// import type { UserProfile, Wallet, Transaction, Rates, DCAplan, PriceAlert } from '@/types'
+
+// interface AppStore {
+//   user: UserProfile | null
+//   wallets: Wallet[]
+//   transactions: Transaction[]
+//   transactionCount: number
+//   rates: Rates | null
+//   dcaPlans: DCAplan[]
+//   alerts: PriceAlert[]
+//   isLoading: boolean
+//   isRefreshing: boolean
+//   isInitialized: boolean
+//   error: string | null
+
+//   // Simulation controls
+//   simulationMode: 'auto' | 'forced' | 'off'
+//   isCurrentlySimulated: boolean
+//   setSimulationMode: (mode: 'auto' | 'forced' | 'off') => void
+
+//   setUser: (user: UserProfile) => void
+//   setWallets: (wallets: Wallet[]) => void
+//   setTransactions: (transactions: Transaction[]) => void
+//   setRates: (rates: Rates) => void
+//   addDCAPlan: (plan: DCAplan) => void
+//   removeDCAPlan: (id: string) => void
+//   addAlert: (alert: PriceAlert) => void
+//   removeAlert: (id: string) => void
+//   fetchAppData: () => Promise<void>
+//   refreshAppData: () => Promise<void>
+//   fetchRates: () => Promise<Rates>
+//   fetchTransactions: (
+//     page?: number,
+//     wallet_type?: string,
+//   ) => Promise<{ transactions: Transaction[]; has_next: boolean; count: number }>
+// }
+
+// export const useAppStore = create<AppStore>((set, get) => ({
+//   user: null,
+//   wallets: [],
+//   transactions: [],
+//   transactionCount: 0,
+//   rates: null,
+//   dcaPlans: mockDCAPlans,
+//   alerts: mockAlerts,
+//   isLoading: false,
+//   isRefreshing: false,
+//   isInitialized: false,
+//   error: null,
+
+//   simulationMode: (typeof window !== 'undefined' ? (localStorage.getItem('swiftyex_simulation_mode') as 'auto' | 'forced' | 'off' | null) : null) ?? 'auto',
+//   isCurrentlySimulated: false,
+
+//   setUser: (user) => set({ user }),
+//   setWallets: (wallets) => set({ wallets }),
+//   setTransactions: (transactions) => set({ transactions }),
+//   setRates: (rates) => set({ rates }),
+//   addDCAPlan: (plan) => set((s) => ({ dcaPlans: [...s.dcaPlans, plan] })),
+//   removeDCAPlan: (id) => set((s) => ({ dcaPlans: s.dcaPlans.filter((p) => p.id !== id) })),
+//   addAlert: (alert) => set((s) => ({ alerts: [...s.alerts, alert] })),
+//   removeAlert: (id) => set((s) => ({ alerts: s.alerts.filter((a) => a.id !== id) })),
+
+//   setSimulationMode: (mode) => {
+//     if (typeof window !== 'undefined') {
+//       localStorage.setItem('swiftyex_simulation_mode', mode)
+//     }
+//     set({ simulationMode: mode })
+//     // Re-fetch app data to update state dynamically
+//     get().fetchAppData()
+//   },
+
+//   fetchRates: async () => {
+//     try {
+//       const res = await getRates()
+//       const rates = parseRatesResponse(res.data)
+//       set({ rates })
+//       return rates
+//     } catch {
+//       const fallback = isDevMockFallbackEnabled() ? mockRates : get().rates ?? mockRates
+//       set({ rates: fallback })
+//       return fallback
+//     }
+//   },
+
+//   fetchTransactions: async (page = 1, wallet_type = '') => {
+//     try {
+//       const res = await getTransactions(page, wallet_type)
+//       const parsed = parseTransactionsPage(res.data)
+
+//       const mode = get().simulationMode
+//       const hasNoTransactions = !parsed.transactions.length
+//       const shouldSimulate = mode === 'forced' || (mode === 'auto' && hasNoTransactions)
+
+//       if (shouldSimulate) {
+//         const filtered = wallet_type
+//           ? mockTransactions.filter((t) => {
+//               if (wallet_type === 'usdt') return t.asset === 'USDT'
+//               if (wallet_type === 'btc') return t.asset === 'BTC'
+//               if (wallet_type === 'naira') return t.type === 'deposit' || t.type === 'withdrawal'
+//               return true
+//             })
+//           : mockTransactions
+
+//         return {
+//           transactions: filtered,
+//           has_next: false,
+//           count: filtered.length,
+//         }
+//       }
+
+//       return {
+//         transactions: parsed.transactions,
+//         has_next: parsed.has_next,
+//         count: parsed.count,
+//       }
+//     } catch {
+//       if (!isDevMockFallbackEnabled() && get().simulationMode !== 'forced' && get().simulationMode !== 'auto') {
+//         return { transactions: [], has_next: false, count: 0 }
+//       }
+
+//       const filtered = wallet_type
+//         ? mockTransactions.filter((t) => {
+//             if (wallet_type === 'usdt') return t.asset === 'USDT'
+//             if (wallet_type === 'btc') return t.asset === 'BTC'
+//             if (wallet_type === 'naira') return t.type === 'deposit' || t.type === 'withdrawal'
+//             return true
+//           })
+//         : mockTransactions
+
+//       return {
+//         transactions: filtered,
+//         has_next: false,
+//         count: filtered.length,
+//       }
+//     }
+//   },
+
+//   fetchAppData: async () => {
+//     if (get().isLoading) return
+
+//     set({ isLoading: true, error: null })
+
+//     try {
+//       const [meRes, walletsRes, ratesRes, txRes] = await Promise.all([
+//         getMe(),
+//         getWallets(),
+//         getRates(),
+//         getTransactions(1, ''),
+//       ])
+
+//       const user = parseUserResponse(meRes.data)
+//       const wallets = parseWalletsResponse(walletsRes.data)
+//       const rates = parseRatesResponse(ratesRes.data)
+//       const txPage = parseTransactionsPage(txRes.data)
+
+//       const mode = get().simulationMode
+//       const hasNoBalances = !wallets.length || wallets.every(w => Number(w.balance || 0) === 0)
+//       const hasNoTransactions = !txPage.transactions.length
+//       const shouldSimulate = mode === 'forced' || (mode === 'auto' && (hasNoBalances || hasNoTransactions))
+
+//       if (shouldSimulate) {
+//         set({
+//           user: user || mockUser,
+//           wallets: (mode === 'forced' || hasNoBalances) ? mockWallets : wallets,
+//           rates: rates || mockRates,
+//           transactions: (mode === 'forced' || hasNoTransactions) ? mockTransactions : txPage.transactions,
+//           transactionCount: (mode === 'forced' || hasNoTransactions) ? mockTransactions.length : txPage.count,
+//           isCurrentlySimulated: true,
+//           isLoading: false,
+//           isInitialized: true,
+//           error: null,
+//         })
+//         return
+//       }
+
+//       set({
+//         user,
+//         wallets,
+//         rates,
+//         transactions: txPage.transactions,
+//         transactionCount: txPage.count,
+//         isCurrentlySimulated: false,
+//         isLoading: false,
+//         isInitialized: true,
+//         error: null,
+//       })
+//     } catch {
+//       if (isDevMockFallbackEnabled() || get().simulationMode === 'forced' || get().simulationMode === 'auto') {
+//         set({
+//           user: get().user || mockUser,
+//           wallets: mockWallets,
+//           rates: get().rates || mockRates,
+//           transactions: mockTransactions,
+//           transactionCount: mockTransactions.length,
+//           isCurrentlySimulated: true,
+//           isLoading: false,
+//           isInitialized: true,
+//           error: null,
+//         })
+//         return
+//       }
+
+//       set({
+//         user: null,
+//         wallets: [],
+//         rates: null,
+//         transactions: [],
+//         transactionCount: 0,
+//         isCurrentlySimulated: false,
+//         isLoading: false,
+//         isInitialized: true,
+//         error: 'Unable to load your data. Pull down to retry.',
+//       })
+//     }
+//   },
+
+//   refreshAppData: async () => {
+//     set({ isRefreshing: true, error: null })
+
+//     try {
+//       const [meRes, walletsRes, ratesRes, txRes] = await Promise.all([
+//         getMe(),
+//         getWallets(),
+//         getRates(),
+//         getTransactions(1, ''),
+//       ])
+
+//       const user = parseUserResponse(meRes.data)
+//       const wallets = parseWalletsResponse(walletsRes.data)
+//       const rates = parseRatesResponse(ratesRes.data)
+//       const txPage = parseTransactionsPage(txRes.data)
+
+//       const mode = get().simulationMode
+//       const hasNoBalances = !wallets.length || wallets.every(w => Number(w.balance || 0) === 0)
+//       const hasNoTransactions = !txPage.transactions.length
+//       const shouldSimulate = mode === 'forced' || (mode === 'auto' && (hasNoBalances || hasNoTransactions))
+
+//       if (shouldSimulate) {
+//         set({
+//           user: user ?? get().user ?? mockUser,
+//           wallets: (mode === 'forced' || hasNoBalances) ? mockWallets : wallets,
+//           rates,
+//           transactions: (mode === 'forced' || hasNoTransactions) ? mockTransactions : txPage.transactions,
+//           transactionCount: (mode === 'forced' || hasNoTransactions) ? mockTransactions.length : txPage.count,
+//           isCurrentlySimulated: true,
+//           isRefreshing: false,
+//           error: null,
+//         })
+//         return
+//       }
+
+//       set({
+//         user: user ?? get().user,
+//         wallets,
+//         rates,
+//         transactions: txPage.transactions,
+//         transactionCount: txPage.count,
+//         isCurrentlySimulated: false,
+//         isRefreshing: false,
+//         error: null,
+//       })
+//     } catch {
+//       if (isDevMockFallbackEnabled() || get().simulationMode === 'forced' || get().simulationMode === 'auto') {
+//         set({
+//           user: get().user || mockUser,
+//           wallets: mockWallets,
+//           rates: get().rates || mockRates,
+//           transactions: mockTransactions,
+//           transactionCount: mockTransactions.length,
+//           isCurrentlySimulated: true,
+//           isRefreshing: false,
+//           error: null,
+//         })
+//         return
+//       }
+//       set({
+//         isRefreshing: false,
+//         error: 'Refresh failed. Please try again.',
+//       })
+//     }
+//   },
+// }))
+
+
+
 import { create } from 'zustand'
 import {
   getMe,
@@ -33,7 +338,6 @@ interface AppStore {
   isInitialized: boolean
   error: string | null
 
-  // Simulation controls
   simulationMode: 'auto' | 'forced' | 'off'
   isCurrentlySimulated: boolean
   setSimulationMode: (mode: 'auto' | 'forced' | 'off') => void
@@ -55,6 +359,29 @@ interface AppStore {
   ) => Promise<{ transactions: Transaction[]; has_next: boolean; count: number }>
 }
 
+// ---------------------------------------------------------------------------
+// Helper: given the simulation mode and the real API results, should we
+// show simulated (mock) data?
+//
+//  'forced' → always simulate, no matter what the API returns
+//  'auto'   → simulate only when the account looks empty/new
+//             (no wallets with a balance AND no transactions)
+//  'off'    → never simulate; always show real data (or an error)
+// ---------------------------------------------------------------------------
+function shouldSimulateData(
+  mode: 'auto' | 'forced' | 'off',
+  wallets: Wallet[],
+  txCount: number,
+): boolean {
+  if (mode === 'forced') return true
+  if (mode === 'off') return false
+
+  // 'auto': only fall back to mock data when the account is genuinely empty
+  const hasRealBalance = wallets.some(w => Number(w.balance || 0) > 0)
+  const hasRealTransactions = txCount > 0
+  return !hasRealBalance && !hasRealTransactions
+}
+
 export const useAppStore = create<AppStore>((set, get) => ({
   user: null,
   wallets: [],
@@ -68,7 +395,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
   isInitialized: false,
   error: null,
 
-  simulationMode: (typeof window !== 'undefined' ? (localStorage.getItem('swiftyex_simulation_mode') as 'auto' | 'forced' | 'off' | null) : null) ?? 'auto',
+  simulationMode:
+    (typeof window !== 'undefined'
+      ? (localStorage.getItem('swiftyex_simulation_mode') as 'auto' | 'forced' | 'off' | null)
+      : null) ?? 'auto',
   isCurrentlySimulated: false,
 
   setUser: (user) => set({ user }),
@@ -85,10 +415,12 @@ export const useAppStore = create<AppStore>((set, get) => ({
       localStorage.setItem('swiftyex_simulation_mode', mode)
     }
     set({ simulationMode: mode })
-    // Re-fetch app data to update state dynamically
     get().fetchAppData()
   },
 
+  // -------------------------------------------------------------------------
+  // fetchRates — unchanged, always hits real API with mock fallback on error
+  // -------------------------------------------------------------------------
   fetchRates: async () => {
     try {
       const res = await getRates()
@@ -102,16 +434,18 @@ export const useAppStore = create<AppStore>((set, get) => ({
     }
   },
 
+  // -------------------------------------------------------------------------
+  // fetchTransactions — uses the shared helper so behaviour is consistent
+  // -------------------------------------------------------------------------
   fetchTransactions: async (page = 1, wallet_type = '') => {
     try {
       const res = await getTransactions(page, wallet_type)
       const parsed = parseTransactionsPage(res.data)
-
       const mode = get().simulationMode
-      const hasNoTransactions = !parsed.transactions.length
-      const shouldSimulate = mode === 'forced' || (mode === 'auto' && hasNoTransactions)
 
-      if (shouldSimulate) {
+      const simulate = shouldSimulateData(mode, get().wallets, parsed.transactions.length)
+
+      if (simulate) {
         const filtered = wallet_type
           ? mockTransactions.filter((t) => {
               if (wallet_type === 'usdt') return t.asset === 'USDT'
@@ -121,11 +455,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
             })
           : mockTransactions
 
-        return {
-          transactions: filtered,
-          has_next: false,
-          count: filtered.length,
-        }
+        return { transactions: filtered, has_next: false, count: filtered.length }
       }
 
       return {
@@ -134,7 +464,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
         count: parsed.count,
       }
     } catch {
-      if (!isDevMockFallbackEnabled() && get().simulationMode !== 'forced' && get().simulationMode !== 'auto') {
+      const mode = get().simulationMode
+      if (mode === 'off' && !isDevMockFallbackEnabled()) {
         return { transactions: [], has_next: false, count: 0 }
       }
 
@@ -147,17 +478,15 @@ export const useAppStore = create<AppStore>((set, get) => ({
           })
         : mockTransactions
 
-      return {
-        transactions: filtered,
-        has_next: false,
-        count: filtered.length,
-      }
+      return { transactions: filtered, has_next: false, count: filtered.length }
     }
   },
 
+  // -------------------------------------------------------------------------
+  // fetchAppData
+  // -------------------------------------------------------------------------
   fetchAppData: async () => {
     if (get().isLoading) return
-
     set({ isLoading: true, error: null })
 
     try {
@@ -174,17 +503,17 @@ export const useAppStore = create<AppStore>((set, get) => ({
       const txPage = parseTransactionsPage(txRes.data)
 
       const mode = get().simulationMode
-      const hasNoBalances = !wallets.length || wallets.every(w => Number(w.balance || 0) === 0)
-      const hasNoTransactions = !txPage.transactions.length
-      const shouldSimulate = mode === 'forced' || (mode === 'auto' && (hasNoBalances || hasNoTransactions))
+      const simulate = shouldSimulateData(mode, wallets, txPage.transactions.length)
 
-      if (shouldSimulate) {
+      if (simulate) {
         set({
-          user: user || mockUser,
-          wallets: (mode === 'forced' || hasNoBalances) ? mockWallets : wallets,
-          rates: rates || mockRates,
-          transactions: (mode === 'forced' || hasNoTransactions) ? mockTransactions : txPage.transactions,
-          transactionCount: (mode === 'forced' || hasNoTransactions) ? mockTransactions.length : txPage.count,
+          // Always show the real user profile if we have one — only
+          // wallets/transactions get the mock treatment
+          user: user ?? mockUser,
+          wallets: mode === 'forced' ? mockWallets : wallets.length ? wallets : mockWallets,
+          rates: rates ?? mockRates,
+          transactions: mockTransactions,
+          transactionCount: mockTransactions.length,
           isCurrentlySimulated: true,
           isLoading: false,
           isInitialized: true,
@@ -205,35 +534,40 @@ export const useAppStore = create<AppStore>((set, get) => ({
         error: null,
       })
     } catch {
-      if (isDevMockFallbackEnabled() || get().simulationMode === 'forced' || get().simulationMode === 'auto') {
+      const mode = get().simulationMode
+      if (mode === 'off' && !isDevMockFallbackEnabled()) {
         set({
-          user: get().user || mockUser,
-          wallets: mockWallets,
-          rates: get().rates || mockRates,
-          transactions: mockTransactions,
-          transactionCount: mockTransactions.length,
-          isCurrentlySimulated: true,
+          user: null,
+          wallets: [],
+          rates: null,
+          transactions: [],
+          transactionCount: 0,
+          isCurrentlySimulated: false,
           isLoading: false,
           isInitialized: true,
-          error: null,
+          error: 'Unable to load your data. Pull down to retry.',
         })
         return
       }
 
+      // 'auto' or 'forced' — always fall back to mock on any API error
       set({
-        user: null,
-        wallets: [],
-        rates: null,
-        transactions: [],
-        transactionCount: 0,
-        isCurrentlySimulated: false,
+        user: get().user ?? mockUser,
+        wallets: mockWallets,
+        rates: get().rates ?? mockRates,
+        transactions: mockTransactions,
+        transactionCount: mockTransactions.length,
+        isCurrentlySimulated: true,
         isLoading: false,
         isInitialized: true,
-        error: 'Unable to load your data. Pull down to retry.',
+        error: null,
       })
     }
   },
 
+  // -------------------------------------------------------------------------
+  // refreshAppData — mirrors fetchAppData logic exactly
+  // -------------------------------------------------------------------------
   refreshAppData: async () => {
     set({ isRefreshing: true, error: null })
 
@@ -251,17 +585,15 @@ export const useAppStore = create<AppStore>((set, get) => ({
       const txPage = parseTransactionsPage(txRes.data)
 
       const mode = get().simulationMode
-      const hasNoBalances = !wallets.length || wallets.every(w => Number(w.balance || 0) === 0)
-      const hasNoTransactions = !txPage.transactions.length
-      const shouldSimulate = mode === 'forced' || (mode === 'auto' && (hasNoBalances || hasNoTransactions))
+      const simulate = shouldSimulateData(mode, wallets, txPage.transactions.length)
 
-      if (shouldSimulate) {
+      if (simulate) {
         set({
           user: user ?? get().user ?? mockUser,
-          wallets: (mode === 'forced' || hasNoBalances) ? mockWallets : wallets,
+          wallets: mode === 'forced' ? mockWallets : wallets.length ? wallets : mockWallets,
           rates,
-          transactions: (mode === 'forced' || hasNoTransactions) ? mockTransactions : txPage.transactions,
-          transactionCount: (mode === 'forced' || hasNoTransactions) ? mockTransactions.length : txPage.count,
+          transactions: mockTransactions,
+          transactionCount: mockTransactions.length,
           isCurrentlySimulated: true,
           isRefreshing: false,
           error: null,
@@ -280,22 +612,21 @@ export const useAppStore = create<AppStore>((set, get) => ({
         error: null,
       })
     } catch {
-      if (isDevMockFallbackEnabled() || get().simulationMode === 'forced' || get().simulationMode === 'auto') {
-        set({
-          user: get().user || mockUser,
-          wallets: mockWallets,
-          rates: get().rates || mockRates,
-          transactions: mockTransactions,
-          transactionCount: mockTransactions.length,
-          isCurrentlySimulated: true,
-          isRefreshing: false,
-          error: null,
-        })
+      const mode = get().simulationMode
+      if (mode === 'off' && !isDevMockFallbackEnabled()) {
+        set({ isRefreshing: false, error: 'Refresh failed. Please try again.' })
         return
       }
+
       set({
+        user: get().user ?? mockUser,
+        wallets: mockWallets,
+        rates: get().rates ?? mockRates,
+        transactions: mockTransactions,
+        transactionCount: mockTransactions.length,
+        isCurrentlySimulated: true,
         isRefreshing: false,
-        error: 'Refresh failed. Please try again.',
+        error: null,
       })
     }
   },

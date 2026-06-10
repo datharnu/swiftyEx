@@ -4,4 +4,5 @@ export const colors = {
   teal: '#469B88',
   gold: '#EED868',
   white: '#FFFFFF',
+  purple: '#6824D3'
 } as const

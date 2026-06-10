@@ -31,11 +31,11 @@ function HatchedBar({
     <g>
       <defs>
         <linearGradient id={`grad-${id}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={colors.white} stopOpacity="0.95" />
-          <stop offset="100%" stopColor={colors.white} stopOpacity="0" />
+          <stop offset="0%" stopColor={colors.purple} stopOpacity="0.95" />
+          <stop offset="100%" stopColor={colors.purple} stopOpacity="0" />
         </linearGradient>
         <pattern id={id} patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
-          <line x1="0" y1="0" x2="0" y2="6" stroke={colors.blue} strokeWidth="1.5" opacity="0.45" />
+          <line x1="0" y1="0" x2="0" y2="6" stroke={colors.purple} strokeWidth="1.5" opacity="0.45" />
         </pattern>
       </defs>
 
@@ -98,7 +98,7 @@ export function PortfolioChart({ totalNgn }: PortfolioChartProps) {
   return (
     <section
       className="px-5 pb-6 pt-3"
-      style={{ backgroundColor: '#28231d' }}
+      style={{ backgroundColor: "#F2F2F2" }}
     >
       {/* Range selector */}
       <div className="flex items-center justify-between gap-1">
@@ -113,8 +113,8 @@ export function PortfolioChart({ totalNgn }: PortfolioChartProps) {
             }}
             className="rounded-full px-2.5 py-1 text-xs font-semibold transition"
             style={{
-              backgroundColor: range === r ? colors.white : 'transparent',
-              color: range === r ? colors.ink : `${colors.white}B3`,
+              backgroundColor: range === r ? colors.purple : 'transparent',
+              color: range === r ? colors.white : `${colors.purple}B3`,
             }}
           >
             {r}
@@ -125,14 +125,14 @@ export function PortfolioChart({ totalNgn }: PortfolioChartProps) {
       {/* Selected value */}
       <div className="mt-4">
         <div className="flex items-center gap-2">
-          <p className="text-sm font-medium" style={{ color: `${colors.white}CC` }}>
+          <p className="text-sm font-medium" style={{ color: `${colors.purple}CC` }}>
             {activePoint?.fullLabel}
           </p>
           {/* <SimulatedBadge label="Demo" className="!bg-white/15 !text-white/90" /> */}
         </div>
         <p
           className="mt-0.5 font-mono text-3xl font-bold tracking-tight"
-          style={{ color: colors.white }}
+          style={{ color: colors.purple }}
         >
           {formatNgn(activePoint?.value ?? 0)}
         </p>
@@ -161,7 +161,7 @@ export function PortfolioChart({ totalNgn }: PortfolioChartProps) {
             x={chartWidth - padX}
             y={avgY - 6}
             textAnchor="end"
-            fill={colors.white}
+            fill={colors.purple}
             fontSize="9"
             fontWeight="600"
           >
@@ -192,7 +192,7 @@ export function PortfolioChart({ totalNgn }: PortfolioChartProps) {
                   x={x + barWidth / 2}
                   y={chartHeight + 18}
                   textAnchor="middle"
-                  fill={isActive ? colors.white : `${colors.white}99`}
+                  fill={isActive ? colors.purple : `${colors.purple}99`}
                   fontSize="11"
                   fontWeight={isActive ? 700 : 500}
                 >
