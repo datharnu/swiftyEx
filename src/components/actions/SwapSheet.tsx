@@ -206,7 +206,6 @@ import { useMemo, useState } from 'react'
 import { ArrowDownUp, RefreshCcw, CheckCircle2 } from 'lucide-react'
 import { WalletPicker } from './WalletPicker'
 import { getWalletSymbol } from '@/lib/assets'
-import { openBotAction } from '@/lib/bot'
 import { parseBalance } from '@/lib/format'
 import type { Rates, Wallet, WalletType } from '@/types'
 
@@ -290,15 +289,6 @@ export function SwapSheet({ wallets, rates, onClose }: SwapSheetProps) {
     await new Promise((r) => setTimeout(r, 1200))
 
     setStep('success')
-
-    // optional delayed bot action (prevents sudden redirect feel)
-    setTimeout(() => {
-      openBotAction('swap', {
-        from,
-        to,
-        amount: amount.replace(/,/g, ''),
-      })
-    }, 1200)
   }
 
   return (

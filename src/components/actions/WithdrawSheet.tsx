@@ -130,7 +130,6 @@ import { useMemo, useState } from 'react'
 import { ArrowUpRight, Loader2, CheckCircle2 } from 'lucide-react'
 import { WalletPicker } from './WalletPicker'
 import { getWalletSymbol } from '@/lib/assets'
-import { openBotAction } from '@/lib/bot'
 import { formatBalance, parseBalance } from '@/lib/format'
 import type { Wallet, WalletType } from '@/types'
 
@@ -177,15 +176,6 @@ export function WithdrawSheet({ wallets, onClose }: { wallets: Wallet[]; onClose
     await new Promise((r) => setTimeout(r, 1200))
 
     setStep('success')
-
-    // optional delayed bot handoff (NOT immediate)
-    setTimeout(() => {
-      openBotAction('withdraw', {
-        wallet: walletType,
-        amount: amount.replace(/,/g, ''),
-        dest: destination.slice(0, 20),
-      })
-    }, 1200)
   }
 
   return (
@@ -262,7 +252,7 @@ export function WithdrawSheet({ wallets, onClose }: { wallets: Wallet[]; onClose
             Withdrawal initiated
           </p>
           <p className="text-xs text-zinc-500">
-            You’ll be redirected to Telegram shortly
+            Your transfer will be processed shortly.
           </p>
 
           <button

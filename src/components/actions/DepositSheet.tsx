@@ -75,11 +75,12 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowDownLeft, Loader2, CheckCircle2 } from 'lucide-react'
+import { ArrowDownLeft, Loader2, CheckCircle2, Copy, Check } from 'lucide-react'
 import { WalletPicker } from './WalletPicker'
 import { getWalletLabel } from '@/lib/assets'
 import { DepositAddress } from '@/components/wallet/DepositAddress'
-import { openBotAction } from '@/lib/bot'
+import { useAppStore } from '@/store/useAppStore'
+import { useTelegram } from '@/hooks/useTelegram'
 import type { Wallet, WalletType } from '@/types'
 
 export function DepositSheet({ wallets, onClose }: { wallets: Wallet[]; onClose: () => void }) {
@@ -89,6 +90,11 @@ export function DepositSheet({ wallets, onClose }: { wallets: Wallet[]; onClose:
 
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState<'idle' | 'loading' | 'ready'>('idle')
+  const [copied, setCopied] = useState(false)
+
+  const user = useAppStore((s) => s.user)
+  const { user: tgUser } = useTelegram()
+  const firstName = user?.first_name ?? tgUser?.first_name ?? 'User'
 
   const wallet = wallets.find((w) => w.wallet_type === selected) ?? null
   const isNaira = selected === 'naira'
@@ -102,11 +108,12 @@ export function DepositSheet({ wallets, onClose }: { wallets: Wallet[]; onClose:
 
     setStep('ready')
     setLoading(false)
+  }
 
-    // optional: then open bot after UX feedback
-    setTimeout(() => {
-      openBotAction('deposit', { wallet: 'naira' })
-    }, 800)
+  const handleCopyAccount = () => {
+    navigator.clipboard.writeText('9876543210')
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   return (
@@ -163,13 +170,43 @@ export function DepositSheet({ wallets, onClose }: { wallets: Wallet[]; onClose:
             )}
 
             {step === 'ready' && (
-              <div className="flex flex-col items-center py-6 text-center">
-                <CheckCircle2 className="size-6 text-green-500" />
-                <p className="mt-3 text-sm font-medium text-zinc-800">
-                  Bank details ready
-                </p>
-                <p className="text-xs text-zinc-500">
-                  Opening in Swifty bot...
+              <div className="space-y-4 py-2 text-left">
+                <div className="flex items-center gap-2 text-emerald-600">
+                  <CheckCircle2 className="size-5 shrink-0" />
+                  <p className="text-sm font-semibold">Bank details generated</p>
+                </div>
+
+                <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm space-y-3">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-zinc-400 font-medium">BANK NAME</span>
+                    <span className="text-zinc-950 font-bold">Wema Bank</span>
+                  </div>
+
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-zinc-400 font-medium">ACCOUNT NUMBER</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-zinc-950 font-bold text-sm tracking-wider">9876543210</span>
+                      <button
+                        type="button"
+                        onClick={handleCopyAccount}
+                        className="text-zinc-500 hover:text-zinc-700 active:scale-95 transition"
+                        title="Copy account number"
+                      >
+                        {copied ? <Check className="size-3.5 text-emerald-600" /> : <Copy className="size-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-zinc-400 font-medium">ACCOUNT NAME</span>
+                    <span className="text-zinc-950 font-bold truncate max-w-[180px]">
+                      SwiftyEX - {firstName}
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-zinc-400 leading-relaxed">
+                  Transfer funds to this account from any banking app. Your SwiftyEX wallet will be credited automatically.
                 </p>
               </div>
             )}
